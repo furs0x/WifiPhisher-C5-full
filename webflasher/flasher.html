@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f4f4f6">
+<title>ESP32 固件刷写 · ESP Web Tools</title>
+<style>
+:root{
+  --bg:#f4f4f6; --card:#fff; --card-2:#f9f9fb; --pill:#f1f1f4;
+  --line:#e3e3e8; --line-2:#ececf0;
+  --fg:#1c1c21; --fg-2:#4b4b53; --muted:#85858d; --faint:#b9b9c2;
+  --accent:#4f46e5; --accent-soft:#eeedfd; --accent-fg:#fff;
+  --green:#189a58; --green-soft:#e4f6ec; --red:#d64545; --red-soft:#fbe9e9;
+  --amber:#b45309; --amber-soft:#fbf0df;
+  --shadow:0 16px 44px rgba(20,22,30,.16),0 2px 8px rgba(20,22,30,.06);
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;
+  --code:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --r:12px; --rc:8px;
+}
+:root[data-theme="dark"]{
+  --bg:#1a1a1e; --card:#232327; --card-2:#1f1f23; --pill:#2d2d33;
+  --line:#333339; --line-2:#2c2c32;
+  --fg:#ededf1; --fg-2:#b9b9c1; --muted:#8b8b94; --faint:#56565f;
+  --accent:#a5b4fc; --accent-soft:#2b2c47; --accent-fg:#14142a;
+  --green:#6fd99b; --green-soft:#1e3a2b; --red:#f28b82; --red-soft:#45272a;
+  --amber:#f2b544; --amber-soft:#3f3220;
+  --shadow:0 16px 44px rgba(0,0,0,.55),0 2px 8px rgba(0,0,0,.3);
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font);font-size:13px;line-height:1.55;
+  -webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent;
+  padding:env(safe-area-inset-top) max(16px,env(safe-area-inset-right)) env(safe-area-inset-bottom) max(16px,env(safe-area-inset-left));}
+.wrap{max-width:720px;margin:0 auto;padding:24px 0 48px}
+header{display:flex;align-items:center;gap:10px;margin-bottom:18px}
+header .logo{color:var(--accent);display:inline-flex}
+header h1{margin:0;font-size:17px;font-weight:650}
+header .sp{flex:1}
+.icon-btn{display:inline-grid;place-items:center;width:32px;height:32px;border:0;border-radius:var(--rc);background:none;color:var(--fg-2);cursor:pointer}
+.icon-btn:hover{background:var(--pill);color:var(--fg)}
+.icon-btn svg{width:18px;height:18px;fill:currentColor}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px;margin-bottom:12px}
+.card h2{margin:0 0 6px;font-size:13px;font-weight:600}
+.hint{color:var(--muted);font-size:12px;margin:0 0 14px}
+
+label{display:block;margin:12px 0 6px;font-size:11.5px;color:var(--muted);font-weight:550}
+label:first-child{margin-top:0}
+input[type=text]{width:100%;height:36px;padding:0 10px;border:1px solid var(--line);border-radius:var(--rc);
+  background:var(--pill);color:var(--fg);font:inherit;font-size:16px;outline:none}
+input[type=text]:focus{border-color:var(--accent);background:var(--card)}
+
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+button.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:34px;padding:0 14px;
+  border:1px solid transparent;border-radius:var(--rc);background:var(--accent);color:var(--accent-fg);
+  font:inherit;font-size:12.5px;font-weight:600;cursor:pointer}
+button.btn.secondary{background:var(--pill);color:var(--fg);border-color:var(--line)}
+button.btn:disabled{opacity:.5;cursor:not-allowed}
+
+#installer{display:flex;justify-content:center;padding:8px 0 4px}
+/* esp-web-install-button 内部是 shadow DOM 的原生 button */
+esp-web-install-button::part(button){border-radius:8px}
+
+.status{margin-top:12px;padding:10px 12px;border-radius:var(--rc);font-size:12px;
+  background:var(--card-2);border:1px solid var(--line);color:var(--fg-2)}
+.status.ok{background:var(--green-soft);border-color:transparent;color:var(--green)}
+.status.bad{background:var(--red-soft);border-color:transparent;color:var(--red)}
+.status.warn{background:var(--amber-soft);border-color:transparent;color:var(--amber)}
+
+details{margin-top:12px;border:1px solid var(--line);border-radius:var(--rc);padding:10px 12px;background:var(--card-2)}
+summary{cursor:pointer;font-size:12px;color:var(--fg-2);font-weight:550}
+pre{margin:10px 0 0;padding:10px;border-radius:6px;background:var(--bg);border:1px solid var(--line);
+  font-family:var(--code);font-size:11px;line-height:1.6;overflow-x:auto;color:var(--fg-2)}
+code{font-family:var(--code);font-size:11.5px;background:var(--pill);padding:1px 5px;border-radius:4px}
+.note{border-left:3px solid var(--amber);background:var(--amber-soft);border-radius:0 var(--rc) var(--rc) 0;
+  padding:10px 12px;font-size:11.5px;color:var(--fg-2);margin-top:12px}
+.note strong{color:var(--amber)}
+footer{color:var(--faint);font-size:11px;text-align:center;margin-top:18px}
+</style>
+</head>
+<body>
+<script>
+(function(){try{var t=localStorage.getItem('esp32_theme');var d=t?t==='dark':matchMedia('(prefers-color-scheme: dark)').matches;document.documentElement.setAttribute('data-theme',d?'dark':'light');}catch(e){document.documentElement.setAttribute('data-theme','light');}})();
+</script>
+
+<div class="wrap">
+  <header>
+    <span class="logo"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg></span>
+    <h1>ESP32 固件刷写</h1>
+    <span class="sp"></span>
+    <button class="icon-btn" id="theme" aria-label="切换主题" title="切换主题">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 109 9 7 7 0 01-9-9z"/></svg>
+    </button>
+  </header>
+
+  <div class="card">
+    <h2>1. 选择固件</h2>
+    <p class="hint">填一个 ESP Web Tools 标准的 <code>manifest.json</code> 地址；芯片会自动识别并选择对应 build。</p>
+    <label for="manifest">manifest.json 地址</label>
+    <input type="text" id="manifest" placeholder="firmware/manifest.json" autocomplete="off" spellcheck="false">
+    <div class="actions">
+      <button class="btn" id="useBtn">使用这个 manifest</button>
+      <button class="btn secondary" id="selfBtn">用本站默认</button>
+    </div>
+    <div class="status" id="status">尚未选择 manifest。</div>
+  </div>
+
+  <div class="card">
+    <h2>2. 连接并刷写</h2>
+    <p class="hint">需要桌面版 Chrome / Edge（≥89），并通过 <code>https://</code> 或 <code>localhost</code> 访问。</p>
+    <div id="installer"></div>
+    <div class="note">
+      <strong>说明：</strong>刷写由官方 <code>&lt;esp-web-install-button&gt;</code> 组件完成，
+      芯片识别、擦除、写入、进度和串口重连都由它处理。本页只负责加载组件和传入 manifest。
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>manifest 格式</h2>
+    <p class="hint">官方标准：<code>builds[]</code>，每项含 <code>chipFamily</code> 与 <code>parts[]</code>；<code>offset</code> 用十进制。</p>
+    <details>
+      <summary>展开示例</summary>
+<pre>{
+  "name": "ESP32WifiPhisher",
+  "version": "1.0.0",
+  "builds": [
+    {
+      "chipFamily": "ESP32-S3",
+      "parts": [
+        { "path": "bootloader.bin", "offset": 0 },
+        { "path": "partitions.bin", "offset": 32768 },
+        { "path": "firmware.bin", "offset": 65536 }
+      ]
+    },
+    {
+      "chipFamily": "ESP32",
+      "parts": [
+        { "path": "esp32-bootloader.bin", "offset": 4096 },
+        { "path": "esp32-partitions.bin", "offset": 32768 },
+        { "path": "esp32-firmware.bin", "offset": 65536 }
+      ]
+    }
+  ]
+}</pre>
+    </details>
+  </div>
+
+  <footer>ESP Web Tools 10.x · 需 Chrome/Edge · 本页不收集任何数据</footer>
+</div>
+
+<!-- 官方组件：?module 让 unpkg 处理内部依赖（与 esphome 文档站一致） -->
+<script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
+
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const statusEl = $('status');
+const installerEl = $('installer');
+
+function setStatus(text, kind) {
+  statusEl.className = 'status' + (kind ? ' ' + kind : '');
+  statusEl.textContent = text;
+}
+
+function currentManifest() {
+  // ?manifest= wins so links can be shared.
+  const q = new URLSearchParams(location.search).get('manifest');
+  return q || $('manifest').value.trim();
+}
+
+function mountButton(url) {
+  if (!url) { setStatus('请先填写 manifest 地址。', 'warn'); return; }
+  // The component resolves the manifest relative to the page, so rewrite to absolute.
+  let abs;
+  try { abs = new URL(url, location.href).href; }
+  catch (e) { setStatus('manifest 地址不合法。', 'bad'); return; }
+
+  installerEl.replaceChildren();
+  const btn = document.createElement('esp-web-install-button');
+  btn.setAttribute('manifest', abs);
+  // Slot content is shown by the component for unsupported browsers / https issues.
+  btn.innerHTML =
+    '<span slot="unsupported">此浏览器不支持 Web Serial（请用桌面 Chrome/Edge，并通过 https 或 localhost 访问）。</span>' +
+    '<span slot="not-allowed">只能在 HTTPS 或 localhost 页面刷写。</span>';
+  installerEl.appendChild(btn);
+
+  $('manifest').value = url;
+  setStatus('已加载：' + abs, 'ok');
+
+  // Give an honest heads-up if the manifest obviously looks wrong (best-effort).
+  fetch(abs, { cache: 'no-store' })
+    .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(m => {
+      if (!Array.isArray(m.builds) || !m.builds.length) {
+        setStatus('这个 manifest 没有 builds[]，官方组件会拒绝安装。', 'bad');
+        return;
+      }
+      const fams = m.builds.map(b => b.chipFamily).filter(Boolean);
+      setStatus('已加载 manifest，包含芯片：' + fams.join(', '), 'ok');
+    })
+    .catch(err => setStatus('已设置 manifest，但预检失败（' + err.message + '）。组件仍可能可用，但请检查地址与 CORS。', 'warn'));
+}
+
+$('useBtn').addEventListener('click', () => mountButton(currentManifest()));
+
+$('selfBtn').addEventListener('click', () => {
+  // Default location: alongside this page. Adjust if you publish elsewhere.
+  mountButton('manifest.json');
+});
+
+$('theme').addEventListener('click', () => {
+  const dark = document.documentElement.getAttribute('data-theme') !== 'dark';
+  document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+  try { localStorage.setItem('esp32_theme', dark ? 'dark' : 'light'); } catch(e){}
+  const meta = document.querySelector('meta[name=theme-color]');
+  if (meta) meta.setAttribute('content', dark ? '#1a1a1e' : '#f4f4f6');
+});
+
+// Auto-mount when arriving with ?manifest=...
+const q = new URLSearchParams(location.search).get('manifest');
+if (q) mountButton(q);
+else setStatus('尚未选择 manifest。', '');
+</script>
+</body>
+</html>
