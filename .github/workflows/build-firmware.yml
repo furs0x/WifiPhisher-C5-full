@@ -1,0 +1,131 @@
+name: build-firmware
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['**/*.md', 'data/**']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write   # create releases
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: ${{ matrix.env }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - env: esp32
+            board: esp32dev
+            chipFamily: ESP32
+          - env: esp32s3
+            board: esp32-s3-devkitc-1
+            chipFamily: ESP32-S3
+          - env: esp32c6
+            board: esp32-c6-devkitc-1
+            chipFamily: ESP32-C6
+          # ESP32-C5 needs the maintainer's forked platform (pinned in
+          # platformio.ini); the fork's HEAD was reachable when this was added.
+          - env: esp32c5
+            board: esp32-c5-devkitc-1
+            chipFamily: ESP32-C5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cache PlatformIO
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.platformio
+          key: pio-${{ runner.os }}-${{ matrix.env }}-${{ hashFiles('platformio.ini', 'dependencies.lock') }}
+          restore-keys: pio-${{ runner.os }}-${{ matrix.env }}-
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install PlatformIO
+        run: |
+          python -m pip install --upgrade pip
+          pip install 'platformio>=6.1'
+
+      - name: Build firmware + filesystem
+        run: |
+          set -o pipefail
+          echo "building ${{ matrix.env }} (chipFamily ${{ matrix.chipFamily }})"
+          pio run -e "${{ matrix.env }}" -t buildfs 2>&1 | tail -40
+          pio run -e "${{ matrix.env }}" 2>&1 | tail -60
+
+      - name: Collect artifacts
+        run: |
+          mkdir -p out
+          ls -l dist || true
+          # merge_bins.py writes dist/<env>-merged.bin
+          cp -v "dist/${{ matrix.env }}-merged.bin" out/ 2>/dev/null || true
+          # also keep the raw pieces in case the merge step is skipped
+          # Prefix the split parts: all four matrix jobs share one release, and
+          # identical filenames would overwrite each other.
+          for f in bootloader.bin partitions.bin partition-table.bin firmware.bin spiffs.bin; do
+            find .pio/build/"${{ matrix.env }}" -maxdepth 2 -name "$f" \
+              -exec cp -v {} "out/${{ matrix.env }}-$f" \; 2>/dev/null || true
+          done
+          # refuse to "succeed" with an empty artifact dir
+          test -n "$(ls -A out)" || (echo "no artifacts produced" && exit 1)
+          ls -l out
+
+      - name: Generate ESP Web Tools manifest
+        run: |
+          python scripts/make_manifest.py \
+            --chip "${{ matrix.chipFamily }}" \
+            --name "ESP32WifiPhisher (${{ matrix.env }})" \
+            --version "${{ github.sha }}" \
+            --merged "out/${{ matrix.env }}-merged.bin" \
+            -o out/manifest.json || true
+          # Fall back to split parts if the merged image is missing. The parts
+          # in out/ are prefixed per env, so stage un-prefixed copies first.
+          if [ ! -f out/manifest.json ]; then
+            rm -rf /tmp/parts && mkdir -p /tmp/parts
+            for f in bootloader.bin partitions.bin partition-table.bin firmware.bin; do
+              cp "out/${{ matrix.env }}-$f" "/tmp/parts/$f" 2>/dev/null || true
+            done
+            python scripts/make_manifest.py \
+              --chip "${{ matrix.chipFamily }}" \
+              --dir /tmp/parts -o out/manifest.json || true
+          fi
+          if [ -f out/manifest.json ]; then
+            mv out/manifest.json "out/manifest-${{ matrix.env }}.json"
+          fi
+          cat "out/manifest-${{ matrix.env }}.json" 2>/dev/null || echo "manifest not generated (non-fatal)"
+
+      - name: Publish release asset
+        if: github.event_name != 'pull_request'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: ${{ matrix.env }} build ${{ github.run_number }}
+          body: |
+            Firmware `${{ matrix.env }}` (chipFamily `${{ matrix.chipFamily }}`).
+
+            Files:
+            - `${{ matrix.env }}-merged.bin` — flash this at 0x0
+            - `manifest-${{ matrix.env }}.json` — for the ESP Web Tools flasher
+          files: |
+            out/${{ matrix.env }}-merged.bin
+            out/manifest-${{ matrix.env }}.json
+            out/${{ matrix.env }}-bootloader.bin
+            out/${{ matrix.env }}-partitions.bin
+            out/${{ matrix.env }}-firmware.bin
+            out/${{ matrix.env }}-spiffs.bin
+          fail_on_unmatched_files: false
+          overwrite_files: true

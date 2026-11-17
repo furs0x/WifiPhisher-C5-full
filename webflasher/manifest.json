@@ -1,0 +1,15 @@
+{
+  "name": "ESP32WifiPhisher",
+  "version": "2026.11.14",
+  "builds": [
+    {
+      "chipFamily": "ESP32-C5",
+      "parts": [
+        {
+          "path": "esp32c5-merged.bin",
+          "offset": 0
+        }
+      ]
+    }
+  ]
+}
