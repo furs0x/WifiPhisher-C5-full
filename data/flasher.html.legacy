@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f4f4f6">
+<title>ESP32 固件刷写 · Web Flasher</title>
+<style>
+:root{
+  --bg:#f4f4f6; --card:#fff; --card-2:#f9f9fb; --pill:#f1f1f4; --pill-hover:#e9e9ee;
+  --line:#e3e3e8; --line-2:#ececf0;
+  --fg:#1c1c21; --fg-2:#4b4b53; --muted:#85858d; --faint:#b9b9c2;
+  --accent:#4f46e5; --accent-soft:#eeedfd; --accent-fg:#fff;
+  --green:#189a58; --green-soft:#e4f6ec; --red:#d64545; --red-soft:#fbe9e9;
+  --amber:#b45309; --amber-soft:#fbf0df;
+  --shadow:0 16px 44px rgba(20,22,30,.16),0 2px 8px rgba(20,22,30,.06),0 0 0 .5px rgba(20,22,30,.1);
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;
+  --code:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --r:12px; --rc:8px;
+}
+:root[data-theme="dark"]{
+  --bg:#1a1a1e; --card:#232327; --card-2:#1f1f23; --pill:#2d2d33; --pill-hover:#36363d;
+  --line:#333339; --line-2:#2c2c32;
+  --fg:#ededf1; --fg-2:#b9b9c1; --muted:#8b8b94; --faint:#56565f;
+  --accent:#a5b4fc; --accent-soft:#2b2c47; --accent-fg:#14142a;
+  --green:#6fd99b; --green-soft:#1e3a2b; --red:#f28b82; --red-soft:#45272a;
+  --amber:#f2b544; --amber-soft:#3f3220;
+  --shadow:0 16px 44px rgba(0,0,0,.55),0 2px 8px rgba(0,0,0,.3),0 0 0 .5px rgba(255,255,255,.1);
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font);font-size:13px;line-height:1.5;
+  -webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent;
+  padding:env(safe-area-inset-top) max(16px,env(safe-area-inset-right)) env(safe-area-inset-bottom) max(16px,env(safe-area-inset-left));}
+.wrap{max-width:760px;margin:0 auto;padding:24px 0 48px}
+header{display:flex;align-items:center;gap:10px;margin-bottom:20px}
+header .logo{color:var(--accent);display:inline-flex}
+header h1{margin:0;font-size:17px;font-weight:650}
+header .sp{flex:1}
+.icon-btn{display:inline-grid;place-items:center;width:32px;height:32px;border:0;border-radius:var(--rc);background:none;color:var(--fg-2);cursor:pointer}
+.icon-btn:hover{background:var(--pill);color:var(--fg)}
+.icon-btn svg{width:18px;height:18px;fill:currentColor}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:12px}
+.card h2{margin:0 0 4px;font-size:13px;font-weight:600}
+.card .hint{color:var(--muted);font-size:12px;margin:0 0 14px}
+.step{display:flex;gap:12px}
+.step .n{flex:none;width:22px;height:22px;border-radius:50%;background:var(--accent-soft);color:var(--accent);
+  font-size:11px;font-weight:700;display:grid;place-items:center;margin-top:1px}
+.step .body{flex:1;min-width:0}
+
+label{display:block;margin:12px 0 6px;font-size:11.5px;color:var(--muted);font-weight:550}
+label:first-child{margin-top:0}
+select,input[type=text]{width:100%;height:36px;padding:0 10px;border:1px solid var(--line);border-radius:var(--rc);
+  background:var(--pill);color:var(--fg);font:inherit;font-size:16px;outline:none}
+select{appearance:none;-webkit-appearance:none;padding-right:30px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2385858d' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 10px center}
+select:focus,input:focus{border-color:var(--accent);background:var(--card)}
+
+button.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;height:36px;padding:0 16px;
+  border:1px solid transparent;border-radius:var(--rc);background:var(--accent);color:var(--accent-fg);
+  font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;transition:filter .14s,opacity .14s}
+button.btn:hover{filter:brightness(1.06)}
+button.btn:active{transform:scale(.99)}
+button.btn.secondary{background:var(--pill);color:var(--fg);border-color:var(--line)}
+button.btn.ghost{background:none;border-color:var(--line);color:var(--fg-2)}
+button.btn:disabled{opacity:.45;cursor:not-allowed;filter:none}
+.btn-group{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+
+.pill{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 9px;border-radius:999px;
+  background:var(--pill);color:var(--fg-2);font-size:11.5px;font-weight:550;white-space:nowrap}
+.pill .dot{width:7px;height:7px;border-radius:50%;background:var(--faint)}
+.pill.is-warn{background:var(--amber-soft);color:var(--amber)} .pill.is-warn .dot{background:var(--amber)}
+.pill.is-ok{background:var(--green-soft);color:var(--green)} .pill.is-ok .dot{background:var(--green)}
+.pill.is-bad{background:var(--red-soft);color:var(--red)} .pill.is-bad .dot{background:var(--red)}
+
+.progress{height:8px;border-radius:5px;background:var(--pill);overflow:hidden;margin-top:10px}
+.progress .bar{height:100%;width:0%;border-radius:5px;background:var(--accent);transition:width .2s ease}
+.files{margin-top:12px;border:1px solid var(--line);border-radius:var(--rc);overflow:hidden}
+.files .row{display:flex;align-items:center;gap:8px;padding:8px 11px;border-bottom:1px solid var(--line-2);font-size:12px}
+.files .row:last-child{border-bottom:0}
+.files .row .name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:var(--code);font-size:11.5px}
+.files .row .ofs{color:var(--muted);font-family:var(--code);font-size:11px}
+.files .row .st{flex:none;font-size:11px;font-weight:600;color:var(--faint);min-width:56px;text-align:right}
+.files .row .st.ok{color:var(--green)} .files .row .st.act{color:var(--accent)} .files .row .st.err{color:var(--red)}
+
+.log{margin-top:12px;background:var(--card-2);border:1px solid var(--line);border-radius:var(--rc);
+  padding:10px 12px;font-family:var(--code);font-size:11.5px;line-height:1.6;color:var(--fg-2);
+  max-height:220px;overflow:auto;white-space:pre-wrap;word-break:break-word}
+.log .e{color:var(--red)} .log .ok{color:var(--green)} .log .w{color:var(--amber)} .log .t{color:var(--faint)}
+
+.warn:not(.pill){border-left:3px solid var(--amber);background:var(--amber-soft);border-radius:0 var(--rc) var(--rc) 0;
+  padding:10px 12px;font-size:11.5px;color:var(--fg-2);margin-top:12px}
+.warn strong{color:var(--amber)}
+.unsupported{display:none;border-left:3px solid var(--red);background:var(--red-soft);border-radius:0 var(--rc) var(--rc) 0;
+  padding:12px;font-size:12px;color:var(--fg-2)}
+.unsupported b{color:var(--red)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:12px;margin-top:10px}
+.kv dt{color:var(--muted)} .kv dd{margin:0;font-family:var(--code);font-size:11.5px;overflow-wrap:anywhere}
+footer{color:var(--faint);font-size:11px;text-align:center;margin-top:18px}
+@media (max-width:520px){ body{font-size:13px} .wrap{padding:16px 0 40px} }
+</style>
+</head>
+<body>
+<script>
+(function(){try{var t=localStorage.getItem('esp32_theme');var d=t?t==='dark':matchMedia('(prefers-color-scheme: dark)').matches;document.documentElement.setAttribute('data-theme',d?'dark':'light');}catch(e){document.documentElement.setAttribute('data-theme','light');}})();
+</script>
+
+<div class="wrap">
+  <header>
+    <span class="logo"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg></span>
+    <h1>ESP32 固件刷写</h1>
+    <span class="sp"></span>
+    <button class="icon-btn" id="theme" aria-label="切换主题" title="切换主题">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 109 9 7 7 0 01-9-9z"/></svg>
+    </button>
+  </header>
+
+  <div class="card unsupported" id="unsupported">
+    <b>这个浏览器不支持 Web Serial。</b>
+    <p style="margin:8px 0 0">请使用桌面版 <b>Chrome</b> 或 <b>Edge</b>（≥89），并以 <code>https://</code> 或 <code>http://localhost</code> 打开本页。手机浏览器和 Firefox/Safari 无法直接刷写。</p>
+  </div>
+
+  <div id="app">
+    <div class="card">
+      <div class="step">
+        <div class="n">1</div>
+        <div class="body">
+          <h2>选择设备</h2>
+          <p class="hint">先用 USB 数据线把开发板连到电脑。</p>
+          <label for="target">设备型号</label>
+          <select id="target"></select>
+          <div class="kv" id="targetInfo"></div>
+          <div class="btn-group">
+            <button class="btn" id="connectBtn">连接串口</button>
+            <button class="btn secondary" id="disconnectBtn" disabled>断开</button>
+            <span class="pill" id="connState"><i class="dot"></i><span>未连接</span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="step">
+        <div class="n">2</div>
+        <div class="body">
+          <h2>固件来源</h2>
+          <p class="hint">用仓库构建产物（<code>pio run</code> + <code>merge_bin</code>），或填写已发布的合并镜像 URL。</p>
+
+          <label for="manifestUrl">manifest.json 地址</label>
+          <input type="text" id="manifestUrl" placeholder="https://example.com/firmware/manifest.json" autocomplete="off" spellcheck="false">
+          <div class="btn-group" style="margin-top:10px">
+            <button class="btn secondary" id="loadManifest">读取 manifest</button>
+            <button class="btn ghost" id="pickLocal">从本地选择合并镜像…</button>
+            <input type="file" id="localFile" accept=".bin,application/octet-stream" hidden>
+          </div>
+          <div class="warn">
+            <strong>如实说明：</strong>上面两个入口不会自动给你下载固件——需要你自己先构建或准备好 <code>merged.bin</code> 并让其可访问；本页面只负责把它通过串口写进芯片。
+          </div>
+          <div class="warn" style="border-left-color:var(--red);background:var(--red-soft)">
+            <strong>部署建议：</strong>本页会从 CDN 加载 esptool-js 并申请串口权限，而动态 <code>import()</code> 无法加 SRI 校验。正式使用时请把 esptool-js 的 <code>lib/</code> 放到自己的站点并把 <code>ESPTOOL_BASE</code> 指过去。
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="step">
+        <div class="n">3</div>
+        <div class="body">
+          <h2>刷写</h2>
+          <p class="hint" id="flashHint">默认先擦除整片 Flash，再按 0x10000 单文件写入合并镜像。</p>
+          <div class="warn" id="mergedWarn" style="display:none">
+            <strong>注意：</strong>当前文件比完整 merged 镜像小很多，可能只含 app 分区。
+            空白设备只写 0x10000 会缺 bootloader / 分区表而无法启动，请改用 <code>scripts/merge_bins.py</code>
+            产出的 <code>&lt;env&gt;-merged.bin</code>。
+          </div>
+
+          <label style="display:flex;align-items:center;gap:8px;color:var(--fg-2)">
+            <input type="checkbox" id="eraseAll" checked style="width:16px;height:16px;margin:0;accent-color:var(--accent)">
+            刷写前整片擦除（会清空设备上的配置与采集数据）
+          </label>
+
+          <div class="progress"><div class="bar" id="bar"></div></div>
+          <div class="files" id="fileList"></div>
+          <div class="btn-group">
+            <button class="btn" id="flashBtn" disabled>开始刷写</button>
+            <button class="btn ghost" id="clearBtn">清空日志</button>
+          </div>
+          <div class="log" id="log"><span class="t">[就绪]</span> 等待连接…</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>Web Serial · 需 Chrome/Edge · 本页不收集任何数据</footer>
+</div>
+
+<script>
+'use strict';
+
+/* ------------------------------------------------------------------
+ * Device table. bootloader offset per chip mirrors scripts/merge_bins.py
+ * so a merged image built by the repo flashes at the right place.
+ * ------------------------------------------------------------------ */
+const DEVICES = {
+  esp32:   { label:'ESP32 (devkit)',        chip:'ESP32',   bootloader:0x1000, baud:460800 },
+  esp32s2: { label:'ESP32-S2',              chip:'ESP32-S2',bootloader:0x1000, baud:460800 },
+  esp32s3: { label:'ESP32-S3',              chip:'ESP32-S3',bootloader:0x0,    baud:460800 },
+  esp32c3: { label:'ESP32-C3',              chip:'ESP32-C3',bootloader:0x0,    baud:460800 },
+  esp32c5: { label:'ESP32-C5',              chip:'ESP32-C5',bootloader:0x2000, baud:460800 },
+  esp32c6: { label:'ESP32-C6',              chip:'ESP32-C6',bootloader:0x0,    baud:460800 },
+  cardputer:{label:'M5Stack Cardputer (S3)',chip:'ESP32-S3',bootloader:0x0,    baud:460800 },
+};
+
+const $ = id => document.getElementById(id);
+const logEl = $('log');
+let port = null, transport = null, loader = null, chipFamily = null;
+let firmware = null; // { files:[{path, data:Uint8Array, offset}], label }
+
+function log(msg, cls) {
+  const span = document.createElement('span');
+  if (cls) span.className = cls;
+  span.textContent = msg + '\n';
+  logEl.appendChild(span);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+function fmt(n){ return n >= 1048576 ? (n/1048576).toFixed(2)+' MB' : n >= 1024 ? (n/1024).toFixed(1)+' KB' : n+' B'; }
+function hex(n){ return '0x' + n.toString(16).toUpperCase(); }
+
+/* ---------------- theme ---------------- */
+$('theme').addEventListener('click', () => {
+  const dark = document.documentElement.getAttribute('data-theme') !== 'dark';
+  document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+  try { localStorage.setItem('esp32_theme', dark ? 'dark' : 'light'); } catch(e){}
+  const meta = document.querySelector('meta[name=theme-color]');
+  if (meta) meta.setAttribute('content', dark ? '#1a1a1e' : '#f4f4f6');
+});
+
+/* ---------------- support gate ---------------- */
+// USB unplugged / device reset away: reflect it in the UI instead of leaving
+// a dead connect button state.
+if ('serial' in navigator && navigator.serial.addEventListener) {
+  navigator.serial.addEventListener('disconnect', () => {
+    if (!deviceLostWarned) {
+      deviceLostWarned = true;
+      log('[warn] 串口设备已断开（USB 被拔下或设备重启）', 'w');
+    }
+    loader = null; transport = null; port = null; chipFamily = null;
+    setConn('未连接', 'is-bad');
+    $('connectBtn').disabled = false;
+    $('disconnectBtn').disabled = true;
+    refreshFlashBtn();
+  });
+  navigator.serial.addEventListener('connect', () => { deviceLostWarned = false; });
+}
+
+if (!('serial' in navigator)) {
+  $('app').style.display = 'none';
+  $('unsupported').style.display = 'block';
+}
+
+/* ---------------- device list ---------------- */
+const sel = $('target');
+for (const [key, d] of Object.entries(DEVICES)) {
+  const o = document.createElement('option');
+  o.value = key; o.textContent = d.label;
+  sel.appendChild(o);
+}
+function updateTargetInfo(){
+  const d = DEVICES[sel.value];
+  if (!d) return;
+  $('targetInfo').innerHTML =
+    `<dt>芯片</dt><dd>${d.chip}</dd>` +
+    `<dt>bootloader</dt><dd>${hex(d.bootloader)}</dd>` +
+    `<dt>application</dt><dd>0x10000</dd>` +
+    `<dt>写入方式</dt><dd>merged.bin @ 0x10000</dd>`;
+}
+sel.addEventListener('change', updateTargetInfo);
+updateTargetInfo();
+
+/* ---------------- esptool-js ----------------
+ * Pinned upstream ESM build. This page then asks for serial access, and a
+ * dynamic import() cannot carry an SRI hash — so host esptool-js yourself for
+ * real deployments: copy the package's lib/ next to this page and point
+ * ESPTOOL_BASE at it (e.g. './vendor/esptool-js/').
+ * Upstream: https://unpkg.com/esptool-js@0.5.4/lib/ (ESPLoader + Transport are
+ * re-exported from index.js)
+ * ---------------------------------------------------------------- */
+const ESPTOOL_BASE = 'https://unpkg.com/esptool-js@0.5.4/lib/';
+// index.js re-exports ESPLoader and Transport (see package.json "module").
+const ESPTOOL_ENTRY = ESPTOOL_BASE + 'index.js';
+let esptoolMod = null;
+
+async function ensureEsptool(){
+  if (esptoolMod) return;
+  log('[info] 加载 esptool-js 模块…');
+  try {
+    esptoolMod = await import(ESPTOOL_ENTRY);
+  } catch (err) {
+    throw new Error('esptool-js 模块加载失败：' + err.message +
+      '。离线环境请把 esptool-js 的 lib/ 目录放到本地并修改 ESPTOOL_BASE');
+  }
+  if (!esptoolMod.ESPLoader || !esptoolMod.Transport) {
+    throw new Error('esptool-js 导出缺失（需要 ESPLoader 与 Transport）');
+  }
+}
+
+/* ---------------- connect / disconnect ---------------- */
+let deviceLostWarned = false;
+
+async function teardownSession(afterFlash) {
+  try { if (transport) await transport.disconnect(); } catch (e) {}
+  loader = null; transport = null;
+  // Keep `port` so a quick reconnect can reuse the same authorised port only
+  // while it is still open; otherwise drop it and require a fresh requestPort.
+  try {
+    const info = port && port.getInfo ? port.getInfo() : null;
+    if (!port) { /* nothing to keep */ }
+    void info;
+  } catch (e) { port = null; }
+  chipFamily = null;
+  setConn('未连接', '');
+  $('connectBtn').disabled = false;
+  $('disconnectBtn').disabled = true;
+  refreshFlashBtn();
+  if (afterFlash) log('[info] 会话已关闭；再次刷写请重新连接串口。', '');
+}
+
+const term = {
+  clean(){},
+  writeLine(d){ log(String(d).replace(/\r/g,''), ''); },
+  write(d){ const s=String(d); if(s.trim()) log(s.replace(/\r/g,''), ''); }
+};
+
+$('connectBtn').addEventListener('click', async () => {
+  try {
+    if (!('serial' in navigator)) return;
+    const dev = DEVICES[sel.value];
+    // requestPort() needs the user's click gesture, which expires in a few
+    // seconds; ask for the port FIRST, then load the (cached) module.
+    port = await navigator.serial.requestPort({});
+    await ensureEsptool();
+    transport = new esptoolMod.Transport(port, true);
+    // Open the port first; ESPLoader.main() then resets/syncs the chip.
+    await transport.connect(115200);
+    loader = new esptoolMod.ESPLoader({
+      transport,
+      baudrate: dev.baud,
+      terminal: term,
+      romBaudrate: 115200
+    });
+    setConn('连接中…', 'is-warn');
+    await loader.main();
+    chipFamily = loader.chip.CHIP_NAME || dev.chip;
+    log(`[ok] 已连接：${chipFamily}`, 'ok');
+    setConn(chipFamily, 'is-ok');
+
+    // The selector previously only set the baud rate. Flag a mismatch so a
+    // wrong pick does not silently change baud/assumptions about the image.
+    const wanted = String(dev.chip || '').toUpperCase().replace(/[\s_-]/g, '');
+    const actual = String(chipFamily || '').toUpperCase().replace(/[\s_-]/g, '');
+    if (wanted && actual && !actual.includes(wanted.replace('ESP32', '')) && wanted !== actual) {
+      log(`[warn] 所选型号 ${dev.label} 与实际芯片 ${chipFamily} 不一致；已按实际芯片继续。`, 'w');
+    }
+    $('connectBtn').disabled = true;
+    $('disconnectBtn').disabled = false;
+    refreshFlashBtn();
+  } catch (err) {
+    console.error(err);
+    log('[error] 连接失败：' + (err && err.message ? err.message : err), 'e');
+    setConn('未连接', 'is-bad');
+  }
+});
+
+$('disconnectBtn').addEventListener('click', async () => {
+  try {
+    if (loader) await loader.after('hard_reset');
+  } catch(e){}
+  try { if (transport) await transport.disconnect(); } catch(e){}
+  loader = null; transport = null; port = null; chipFamily = null;
+  log('[info] 已断开串口');
+  setConn('未连接', '');
+  $('connectBtn').disabled = false;
+  $('disconnectBtn').disabled = true;
+  refreshFlashBtn();
+});
+
+function setConn(text, cls){
+  const el = $('connState');
+  el.className = 'pill' + (cls ? ' ' + cls : '');
+  el.querySelector('span').textContent = text;
+}
+
+/* ---------------- firmware sources ---------------- */
+const fileListEl = $('fileList');
+function renderFiles(){
+  fileListEl.replaceChildren();
+  if (!firmware) { $('mergedWarn').style.display = 'none'; return; }
+  // A real merged image carries the ESP image magic 0xE9 at its bootloader
+  // offset (0x1000 / 0x2000 / 0x0). An app-only .bin is also 0xE9, so instead
+  // flag images that are NOT a merged layout: i.e. a lone file at 0x10000 that
+  // is smaller than the bootloader+partition area, or a 0x10000-only file whose
+  // header does not extend to a plausible full flash layout.
+  const looksMerged = firmware.files.some(f => f.offset !== 0x10000) ||
+                      firmware.files.some(f => f.offset === 0x10000 && f.data.length >= 0x290000) ||
+                      mergedMagicOk(firmware);
+  $('mergedWarn').style.display = looksMerged ? 'none' : 'block';
+  firmware.files.forEach((f, i) => {
+    const row = document.createElement('div'); row.className = 'row';
+    const n = document.createElement('span'); n.className='name'; n.textContent = f.path;
+    const o = document.createElement('span'); o.className='ofs'; o.textContent = hex(f.offset) + ' · ' + fmt(f.data.length);
+    const st = document.createElement('span'); st.className='st'; st.id='st'+i; st.textContent='待写入';
+    row.append(n, o, st); fileListEl.appendChild(row);
+  });
+  refreshFlashBtn();
+}
+/* Heuristic: a merged image starts with 0xE9 at the expected bootloader
+   offset; an app-only image placed at 0x10000 has no bootloader area at all. */
+function mergedMagicOk(fw) {
+  const f = fw.files[0];
+  if (!f) return false;
+  const bl = f.bootloader != null ? f.bootloader : 0x0;
+  // Only meaningful when the image was laid out as a single merged blob from 0.
+  if (f.offset === 0x10000) {
+    // If the file itself begins with 0xE9 it may be an app-only image. Accept it
+    // only when it is large enough to plausibly cover the whole partition.
+    return f.data.length >= 0x290000;
+  }
+  if (f.offset === bl && f.data.length > 4) return f.data[0] === 0xE9;
+  return false;
+}
+
+function refreshFlashBtn(){
+  $('flashBtn').disabled = !(loader && firmware && firmware.files.length);
+}
+
+// merged image -> single file at app offset
+function singleMerged(data, label){
+  const appOffset = 0x10000;
+  return { label: label || 'merged.bin', files: [{ path: (label||'merged.bin'), offset: appOffset, data }] };
+}
+
+$('pickLocal').addEventListener('click', () => $('localFile').click());
+$('localFile').addEventListener('change', async (e) => {
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+  try {
+    const buf = new Uint8Array(await file.arrayBuffer());
+    firmware = singleMerged(buf, file.name);
+    log(`[info] 已载入本地镜像 ${file.name}（${fmt(buf.length)}）`);
+    renderFiles();
+  } catch (err) {
+    log('[error] 读取本地文件失败：' + err.message, 'e');
+  } finally {
+    e.target.value = '';
+  }
+});
+
+/* ---- ESP Web Tools manifest helpers ---- */
+function pickBuilds(m) {
+  // Standard: { builds: [ { chipFamily, parts:[{path,offset}] } ] }
+  if (Array.isArray(m && m.builds)) return m.builds;
+  // Tolerated legacy shapes, normalised into one build entry.
+  if (m && m.build && Array.isArray(m.build.parts)) {
+    return [{ chipFamily: m.build.chipFamily || null, parts: m.build.parts }];
+  }
+  if (m && Array.isArray(m.parts)) {
+    return [{ chipFamily: m.chipFamily || null, parts: m.parts }];
+  }
+  return [];
+}
+
+function normalizeFamily(v) {
+  return String(v || '').toUpperCase().replace(/[\s_-]/g, '');
+}
+
+function chooseBuild(builds) {
+  // Prefer the build whose chipFamily matches the detected chip.
+  const want = chipFamily ? normalizeFamily(chipFamily) : '';
+  const selKey = sel && sel.value ? normalizeFamily(DEVICES[sel.value].chip) : '';
+  const matches = b => {
+    const f = normalizeFamily(b.chipFamily);
+    return f && (f === want || f === selKey);
+  };
+  return builds.find(matches) || (builds.length === 1 ? builds[0] : null);
+}
+
+function parseOffset(v) {
+  if (typeof v === 'number') return v;
+  const t = String(v == null ? '' : v).trim();
+  if (!t) return 0;
+  // 0x.. is hex; a bare number is DECIMAL (ESP Web Tools uses decimal),
+  // not hex — parseInt(x, 16) used to corrupt "65536" into 0.
+  if (/^0x[0-9a-f]+$/i.test(t)) return parseInt(t, 16);
+  const n = Number(t);
+  if (Number.isFinite(n)) return Math.trunc(n);
+  const h = parseInt(t, 16);
+  return Number.isFinite(h) ? h : 0;
+}
+
+$('loadManifest').addEventListener('click', async () => {
+  const url = $('manifestUrl').value.trim();
+  if (!url) { log('[warn] 请先填写 manifest.json 地址', 'w'); return; }
+  try {
+    log('[info] 读取 ' + url);
+    const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const m = await res.json();
+    const builds = pickBuilds(m);
+    if (!builds.length) {
+      throw new Error('manifest 没有 builds[]（ESP Web Tools 标准格式）');
+    }
+    const build = chooseBuild(builds);
+    if (!build) throw new Error('manifest 里没有匹配当前芯片的 build');
+    if (!Array.isArray(build.parts) || !build.parts.length) throw new Error('所选 build 缺少 parts');
+
+    const base = new URL(url, location.href);
+    const files = [];
+    for (const p of build.parts) {
+      const pUrl = new URL(p.path, base).href;
+      const r = await fetch(pUrl, { cache: 'no-store' });
+      if (!r.ok) throw new Error('下载 ' + p.path + ' 失败 HTTP ' + r.status);
+      const data = new Uint8Array(await r.arrayBuffer());
+      const offset = parseOffset(p.offset);
+      files.push({ path: p.path, offset, data });
+      log(`[ok] ${p.path} · ${fmt(data.length)} @ ${hex(offset)}`, 'ok');
+    }
+    firmware = { label: build.name || m.name || 'manifest', files, family: build.chipFamily };
+    log(`[info] 选用 build: ${build.chipFamily || '未知芯片'}`, '');
+    renderFiles();
+
+    // Warn up-front if the manifest targets a different chip than what is attached.
+    if (loader && chipFamily && build.chipFamily &&
+        normalizeFamily(build.chipFamily) !== normalizeFamily(chipFamily)) {
+      log(`[warn] manifest 面向 ${build.chipFamily}，当前连接的是 ${chipFamily}`, 'w');
+    }
+  } catch (err) {
+    log('[error] manifest 载入失败：' + err.message, 'e');
+    if (/Failed to fetch/i.test(err.message)) log('[warn] 跨域被拦截时，请让 manifest 与其 bin 同源，或开启 CORS', 'w');
+  }
+});
+
+/* ---------------- flashing ---------------- */
+$('flashBtn').addEventListener('click', async () => {
+  if (!loader || !firmware) return;
+  const bar = $('bar');
+  $('flashBtn').disabled = true;
+  bar.style.width = '0%';
+  try {
+    log('[info] 开始刷写 → ' + firmware.label);
+    if ($('eraseAll').checked) {
+      log('[info] 擦除整片 Flash…');
+      await loader.eraseFlash();
+      log('[ok] 擦除完成', 'ok');
+    }
+    // esptool-js expects each file's data as a binary string (it calls
+    // bstrToUi8 on it), so convert the Uint8Array we loaded.
+    const fileArray = firmware.files.map(f => ({ data: bytesToStr(f.data), address: f.offset }));
+    await loader.writeFlash({
+      fileArray,
+      flashSize: 'keep',
+      flashMode: 'keep',
+      flashFreq: 'keep',
+      eraseAll: false,
+      compress: true,
+      // esptool-js reports COMPRESSED byte counts (totalLen = deflated size),
+      // so progress must be measured within the current file, not against the
+      // uncompressed total (padding compresses to ~3% and would stall the bar).
+      reportProgress: (fileIndex, written, totalLen) => {
+        const filePct = totalLen > 0 ? Math.min(100, (written / totalLen) * 100) : 0;
+        const overall = ((fileIndex + filePct / 100) / firmware.files.length) * 100;
+        bar.style.width = Math.max(0, Math.min(100, overall)).toFixed(1) + '%';
+        const st = document.getElementById('st' + fileIndex);
+        if (st) {
+          st.textContent = Math.round(filePct) + '%';
+          st.className = 'st act';
+          if (filePct >= 100) { st.textContent = '完成'; st.className = 'st ok'; }
+        }
+      },
+      // esptool-js passes the padded image as a binary string; convert to bytes.
+      calculateMD5Hash: (image) => md5(strToBytes(image))
+    });
+    log('[ok] 写入完成，重启设备…', 'ok');
+    await loader.after('hard_reset');
+    bar.style.width = '100%';
+    log('[ok] 已完成。设备已重启，串口会话结束。', 'ok');
+    // The chip is now running the new firmware; the loader session is gone.
+    // Tear the session down so a second click cannot reuse a dead handle.
+    await teardownSession(true);
+  } catch (err) {
+    console.error(err);
+    log('[error] 刷写失败：' + (err && err.message ? err.message : err), 'e');
+    // A failed write usually leaves the port unusable too.
+    await teardownSession(false);
+  } finally {
+    refreshFlashBtn();
+  }
+});
+
+$('clearBtn').addEventListener('click', () => { logEl.replaceChildren(); log('[就绪]'); });
+
+/* ---------------- tiny MD5 (esptool-js needs a hash callback) ---------------- */
+/* Chunked Uint8Array -> binary string (avoids per-byte concat blowups). */
+function bytesToStr(bytes) {
+  let out = '';
+  const CH = 0x8000;
+  for (let i = 0; i < bytes.length; i += CH) {
+    out += String.fromCharCode.apply(null, bytes.subarray(i, i + CH));
+  }
+  return out;
+}
+
+function strToBytes(str) {
+  // A binary string from esptool-js; Uint8Array(str) would be empty, so map it.
+  if (typeof str !== 'string') return str instanceof Uint8Array ? str : new Uint8Array(str);
+  const out = new Uint8Array(str.length);
+  for (let i = 0; i < str.length; i++) out[i] = str.charCodeAt(i) & 0xff;
+  return out;
+}
+
+function md5(buffer) {
+  // Compact MD5. Input: Uint8Array. Output: hex string.
+  const s = [
+    7,12,17,22,7,12,17,22,7,12,17,22,7,12,17,22,
+    5,9,14,20,5,9,14,20,5,9,14,20,5,9,14,20,
+    4,11,16,23,4,11,16,23,4,11,16,23,4,11,16,23,
+    6,10,15,21,6,10,15,21,6,10,15,21,6,10,15,21
+  ];
+  const K = new Int32Array(64);
+  for (let i = 0; i < 64; i++) K[i] = (Math.floor(Math.abs(Math.sin(i + 1)) * 0x100000000)) | 0;
+  const orig = new Uint8Array(buffer);
+  const bitLen = orig.length * 8;
+  const padLen = (((orig.length + 8) >> 6) + 1) << 6;
+  const msg = new Uint8Array(padLen);
+  msg.set(orig);
+  msg[orig.length] = 0x80;
+  const dv = new DataView(msg.buffer);
+  dv.setUint32(padLen - 8, bitLen >>> 0, true);
+  dv.setUint32(padLen - 4, Math.floor(bitLen / 0x100000000), true);
+  let a0 = 0x67452301, b0 = 0xefcdab89 | 0, c0 = 0x98badcfe | 0, d0 = 0x10325476;
+  const M = new Int32Array(16);
+  for (let off = 0; off < msg.length; off += 64) {
+    for (let i = 0; i < 16; i++) M[i] = dv.getInt32(off + i * 4, true);
+    let A = a0, B = b0, C = c0, D = d0;
+    for (let i = 0; i < 64; i++) {
+      let F, g;
+      if (i < 16) { F = (B & C) | (~B & D); g = i; }
+      else if (i < 32) { F = (D & B) | (~D & C); g = (5 * i + 1) % 16; }
+      else if (i < 48) { F = B ^ C ^ D; g = (3 * i + 5) % 16; }
+      else { F = C ^ (B | ~D); g = (7 * i) % 16; }
+      F = (F + A + K[i] + M[g]) | 0;
+      A = D; D = C; C = B;
+      B = (B + ((F << s[i]) | (F >>> (32 - s[i])))) | 0;
+    }
+    a0 = (a0 + A) | 0; b0 = (b0 + B) | 0; c0 = (c0 + C) | 0; d0 = (d0 + D) | 0;
+  }
+  const out = new DataView(new ArrayBuffer(16));
+  [a0, b0, c0, d0].forEach((v, i) => {
+    out.setUint8(i*4, v & 0xff);
+    out.setUint8(i*4+1, (v >>> 8) & 0xff);
+    out.setUint8(i*4+2, (v >>> 16) & 0xff);
+    out.setUint8(i*4+3, (v >>> 24) & 0xff);
+  });
+  let hexout = '';
+  for (let i = 0; i < 16; i++) hexout += out.getUint8(i).toString(16).padStart(2, '0');
+  return hexout;
+}
+</script>
+</body>
+</html>

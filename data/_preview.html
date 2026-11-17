@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>UI preview harness</title>
+<style>
+  html,body{margin:0;height:100%}
+  iframe{border:0;width:100%;height:100%;display:block}
+  #hint{position:fixed;left:8px;bottom:6px;font:11px system-ui;color:#888;background:#fff9;padding:2px 6px;border-radius:4px}
+</style>
+</head>
+<body>
+<iframe id="f"></iframe>
+<script>
+// Minimal ESP32 WebSocket stub so the UI can render with plausible data,
+// without the real firmware and without touching any project code.
+const origWS = window.WebSocket;
+let statusTimer = null;
+class MockWS {
+  constructor(url){
+    this.url = url; this.readyState = 0;
+    setTimeout(()=>{
+      this.readyState = 1; this.onopen && this.onopen();
+      statusTimer = setInterval(()=>{ if (this.onmessage) this.onmessage({data: JSON.stringify(mockStatus())}); }, 2000);
+    }, 120);
+  }
+  send(raw){
+    let m; try{ m = JSON.parse(raw); }catch(e){ return; }
+    const reply = handle(m);
+    if (reply) setTimeout(()=> this.onmessage && this.onmessage({data: JSON.stringify(reply)}), 120);
+  }
+  close(){ clearInterval(statusTimer); this.readyState = 3; this.onclose && this.onclose(); }
+}
+function mockStatus(){
+  return { type:'status', req_id:0,
+    uptime:'00:12:34', ram:42, ssid:'HomeLab-5G', bssid:'AA:BB:CC:11:22:33',
+    ch:36, vendor:'TP-Link', auth:'WPA2', rssi:-51, ch_5g:36, has_5g:true,
+    hs:2, n_clients:3, n_aps:11, tx_ok:120354, tx_drop:12, tx_pps:864, queue:96
+  };
+}
+function rows(){ return []; }
+function handle(m){
+  switch(m.cmd){
+    case 0: return mockStatus();
+    case 2: return {req_id:m.req_id,type:'get_ap_settings',ssid:'MagicWifi',password:'',channel:1,tx_rate:15};
+    case 3: return {req_id:m.req_id,status:'ok',data:[
+        {ssid:'HomeLab-5G',signal:-48,channel:36,bssid:'AA:BB:CC:11:22:33',authmode:'WPA2',authmode_code:3,wps:false},
+        {ssid:'HomeLab',signal:-64,channel:6,bssid:'AA:BB:CC:11:22:34',authmode:'WPA2',authmode_code:3,wps:true},
+        {ssid:'',signal:-70,channel:11,bssid:'AA:BB:CC:11:22:35',authmode:'Open',authmode_code:0,wps:false}
+      ]};
+    case 10: return {req_id:m.req_id,status:'ok',data:[
+        {mac:'DE:AD:BE:EF:00:01',ssid:'HomeLab-5G',rssi:-55,channel:36},
+        {mac:'DE:AD:BE:EF:00:02',ssid:'CoffeeShop',rssi:-77,channel:6}
+      ]};
+    case 16: return {req_id:m.req_id,status:'ok',aps:[
+        ['HomeLab-5G','AA:BB:CC:11:22:33',-48,36,1200,3,1048576,'WPA2',2],
+        ['HomeLab','AA:BB:CC:11:22:34',-64,6,880,1,524288,'WPA2',0]
+      ]};
+    case 17: return {req_id:m.req_id,status:'ok',clients:[
+        ['DE:AD:BE:EF:00:01','AA:BB:CC:11:22:33',36,-55,310,204800,['HomeLab-5G']]
+      ]};
+    case 8: return {req_id:m.req_id,status:'ok',content:'HomeLab-5G,AA:BB:CC:11:22:33,example-pass-1\n'};
+    case 23: return {req_id:m.req_id,status:'ok',type:'last_wifi_credentials',ssid:'HomeLab'};
+    case 24: return {req_id:m.req_id,status:'ok',hosts:[
+        {ip:'192.168.1.1',mac:'AA:BB:CC:00:00:01',hostname:'router.lan',vendor:'TP-Link',friendly_name:'Home Router',manufacturer:'TP-Link',model:'Archer',services:[{source:'mdns',name:'_http',type:'_http',port:80}]},
+        {ip:'192.168.1.24',mac:'AA:BB:CC:00:00:24',hostname:'tv.lan',vendor:'Samsung',friendly_name:'Living Room TV',services:[]}
+      ]};
+    case 28: return {req_id:m.req_id,status:'ok',devices:[
+        ['DE:AD:BE:EF:00:11',-59,'AirPods Pro','Apple','airpods','A1234',42,1,''],
+        ['DE:AD:BE:EF:00:12',-71,'','Unknown','device','',7,9,'0x1e0a']
+      ]};
+    default: return {req_id:m.req_id,status:'ok'};
+  }
+}
+document.addEventListener('DOMContentLoaded',()=>{});
+fetch('admin.html').then(r=>r.text()).then(html=>{
+  const stub = '<scr'+'ipt>(' + MockWS.toString() + ')&&(window.WebSocket=' + MockWS.toString() + ');<\/scr'+'ipt>';
+  // also expose helpers used by stub
+  const helpers = '<scr'+'ipt>var __MOCK__=' + JSON.stringify({}) + ';<\/scr'+'ipt>';
+  const html2 = html.replace('<script src="theme.js"></script>', '<script src="theme.js"></script>' + stub);
+  const blob = new Blob([html2], {type:'text/html'});
+  document.getElementById('f').src = URL.createObjectURL(blob);
+});
+</script>
+<div id="hint">preview harness · mock data, no firmware</div>
+<script>
+// Give the evaluator a tiny API to drive the page for screenshots.
+window.prevNav = function(view){ const f=document.getElementById('f'); f.contentWindow.showView(view, f.contentWindow.document.querySelector('.nav-item[data-view="'+view+'"]')); };
+window.prevTheme = function(){ const f=document.getElementById('f'); f.contentWindow.toggleTheme(); };
+</script>
+</body>
+</html>

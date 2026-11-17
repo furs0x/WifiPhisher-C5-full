@@ -1,0 +1,45 @@
+name: pages-flasher
+
+# Publishes data/ to GitHub Pages so the ESP Web Tools flasher can be opened
+# over HTTPS (Web Serial requires a secure context).
+#
+# NOTE: Pages on a PRIVATE repo needs GitHub Pro/Team/Enterprise. On a free
+# private repo this job will fail; either make the repo public or host data/
+# anywhere that serves HTTPS (Netlify / Cloudflare Pages / your own server).
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'data/**'
+      - '.github/workflows/pages-flasher.yml'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Strip files the flasher site does not need
+        run: |
+          rm -f data/flasher.html.legacy
+          rm -f data/_preview.html data/_preview.README.json
+          rm -f data/ADMIN_UI_README.json
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: data
+      - id: deployment
+        uses: actions/deploy-pages@v4
