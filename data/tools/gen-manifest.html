@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>manifest.json 生成器 · ESP Web Tools</title>
+<style>
+:root{--bg:#f4f4f6;--card:#fff;--pill:#f1f1f4;--line:#e3e3e8;--fg:#1c1c21;--fg-2:#4b4b53;--muted:#85858d;
+--accent:#4f46e5;--accent-soft:#eeedfd;--accent-fg:#fff;--red:#d64545;--rc:8px;
+--font:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;--code:ui-monospace,Menlo,Consolas,monospace}
+:root[data-theme="dark"]{--bg:#1a1a1e;--card:#232327;--pill:#2d2d33;--line:#333339;--fg:#ededf1;--fg-2:#b9b9c1;
+--muted:#8b8b94;--accent:#a5b4fc;--accent-soft:#2b2c47;--accent-fg:#14142a;--red:#f28b82}
+*{box-sizing:border-box}
+body{margin:0;padding:20px;background:var(--bg);color:var(--fg);font-family:var(--font);font-size:13px;line-height:1.55}
+.wrap{max-width:760px;margin:0 auto}
+h1{font-size:17px;margin:0 0 4px}
+p.hint{color:var(--muted);font-size:12px;margin:0 0 16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:12px}
+label{display:block;margin:10px 0 5px;font-size:11.5px;color:var(--muted);font-weight:550}
+input,select{width:100%;height:34px;padding:0 9px;border:1px solid var(--line);border-radius:var(--rc);
+background:var(--pill);color:var(--fg);font:inherit;font-size:14px;outline:none}
+input:focus,select:focus{border-color:var(--accent);background:var(--card)}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row>*{flex:1 1 150px;min-width:0}
+.build{border:1px solid var(--line);border-radius:var(--rc);padding:12px;margin-bottom:10px;background:var(--pill)}
+.build h3{margin:0 0 8px;font-size:12px;font-weight:600;display:flex;gap:8px;align-items:center}
+.part{display:flex;gap:8px;margin-bottom:6px;align-items:center}
+.part input{flex:1 1 auto}
+.part input.off{flex:0 0 110px}
+button{height:32px;padding:0 12px;border:1px solid transparent;border-radius:var(--rc);background:var(--accent);
+color:var(--accent-fg);font:inherit;font-size:12px;font-weight:600;cursor:pointer}
+button.sec{background:var(--pill);color:var(--fg);border-color:var(--line)}
+button.mini{height:26px;padding:0 9px;font-size:11px}
+button.del{background:transparent;color:var(--red);border-color:transparent;font-size:16px;line-height:1;padding:0 6px}
+pre{background:var(--bg);border:1px solid var(--line);border-radius:var(--rc);padding:12px;
+font-family:var(--code);font-size:11.5px;line-height:1.55;overflow-x:auto;margin:10px 0 0;white-space:pre}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>manifest.json 生成器</h1>
+  <p class="hint">按 ESP Web Tools 官方格式生成：<code>builds[].chipFamily</code> + <code>parts[].path/offset</code>，
+  偏移为十进制。填好后导出即可。</p>
+
+  <div class="card">
+    <div class="row">
+      <div><label>name</label><input id="name" value="ESP32WifiPhisher"></div>
+      <div><label>version</label><input id="version" value="1.0.0"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <strong style="font-size:12px">builds</strong>
+      <button class="mini" id="addBuild">+ 添加 build</button>
+    </div>
+    <div id="builds"></div>
+  </div>
+
+  <div class="card">
+    <strong style="font-size:12px">预览</strong>
+    <pre id="preview"></pre>
+    <div class="actions">
+      <button id="export">下载 manifest.json</button>
+      <button class="sec" id="copy">复制</button>
+      <button class="sec" id="preset">插入常见芯片预设</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+const FAMILIES = ['ESP32','ESP32-S2','ESP32-S3','ESP32-C3','ESP32-C5','ESP32-C6','ESP32-C61','ESP32-H2','ESP32-P4'];
+// ESP-IDF bootloader offsets (mirrors esp-idf / merge_bins.py)
+const BOOTLOADER = {'ESP32':4096,'ESP32-S2':4096,'ESP32-S3':0,'ESP32-C3':0,'ESP32-C5':8192,'ESP32-C6':0,'ESP32-C61':0,'ESP32-H2':0,'ESP32-P4':0};
+
+const $ = id => document.getElementById(id);
+const buildsEl = $('builds');
+
+function buildNode(family, parts) {
+  const box = document.createElement('div'); box.className = 'build';
+  const head = document.createElement('h3');
+  const sel = document.createElement('select');
+  FAMILIES.forEach(f => { const o=document.createElement('option'); o.value=f; o.textContent=f; sel.appendChild(o); });
+  sel.value = family || FAMILIES[1];
+  sel.className = 'fam';
+  const del = document.createElement('button'); del.className='del'; del.textContent='×'; del.title='删除此 build';
+  del.onclick = () => { box.remove(); render(); };
+  head.append(sel, del);
+  box.appendChild(head);
+
+  const partsBox = document.createElement('div'); partsBox.className='parts';
+  box.appendChild(partsBox);
+
+  const addPart = document.createElement('button'); addPart.className='mini sec'; addPart.textContent='+ part';
+  addPart.onclick = () => { partsBox.appendChild(partNode('', '')); render(); };
+  box.appendChild(addPart);
+
+  (parts || [{path:'',offset:''}]).forEach(p => partsBox.appendChild(partNode(p.path, p.offset)));
+  sel.addEventListener('change', render);
+  return box;
+}
+
+function partNode(path, offset) {
+  const row = document.createElement('div'); row.className='part';
+  const p = document.createElement('input'); p.placeholder='firmware.bin'; p.className='path'; p.value = path||'';
+  const o = document.createElement('input'); o.placeholder='65536'; o.className='off'; o.value = offset==null?'':String(offset);
+  const del = document.createElement('button'); del.className='del'; del.textContent='×';
+  del.onclick = () => { row.remove(); render(); };
+  p.addEventListener('input', render); o.addEventListener('input', render);
+  row.append(p, o, del);
+  return row;
+}
+
+function readBuilds() {
+  return Array.from(buildsEl.children).map(box => ({
+    chipFamily: box.querySelector('.fam').value,
+    parts: Array.from(box.querySelectorAll('.part')).map(r => ({
+      path: r.querySelector('.path').value.trim(),
+      offset: r.querySelector('.off').value.trim() === '' ? undefined : Number(r.querySelector('.off').value.trim())
+    })).filter(p => p.path)
+  })).filter(b => b.parts.length);
+}
+
+function toManifest() {
+  const builds = readBuilds().map(b => ({
+    chipFamily: b.chipFamily,
+    parts: b.parts.map(p => {
+      const out = { path: p.path };
+      // Decimal offsets, per ESP Web Tools. 0 is fine to include.
+      if (p.offset !== undefined && !Number.isNaN(p.offset)) out.offset = p.offset;
+      return out;
+    })
+  }));
+  return { name: $('name').value.trim() || 'firmware', version: $('version').value.trim() || '1.0.0', builds };
+}
+
+function render() {
+  $('preview').textContent = JSON.stringify(toManifest(), null, 2);
+}
+
+$('addBuild').onclick = () => { buildsEl.appendChild(buildNode()); render(); };
+$('name').addEventListener('input', render);
+$('version').addEventListener('input', render);
+
+$('preset').onclick = () => {
+  // One compiled merged image per chip is the simplest layout the component accepts.
+  buildsEl.replaceChildren();
+  ['ESP32','ESP32-S2','ESP32-S3','ESP32-C3','ESP32-C6'].forEach(f => {
+    const bl = BOOTLOADER[f];
+    buildsEl.appendChild(buildNode(f, [
+      { path: f.toLowerCase().replace(/esp32-?/,'esp32').replace('-','') + '-bootloader.bin', offset: bl },
+      { path: f.toLowerCase().replace(/esp32-?/,'esp32').replace('-','') + '-partitions.bin', offset: 32768 },
+      { path: f.toLowerCase().replace(/esp32-?/,'esp32').replace('-','') + '-firmware.bin', offset: 65536 }
+    ]));
+  });
+  render();
+};
+
+$('export').onclick = () => {
+  const blob = new Blob([JSON.stringify(toManifest(), null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'manifest.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+};
+
+$('copy').onclick = async () => {
+  try { await navigator.clipboard.writeText(JSON.stringify(toManifest(), null, 2)); $('copy').textContent='已复制'; setTimeout(()=>$('copy').textContent='复制', 1200); }
+  catch(e) { $('copy').textContent='复制失败'; }
+};
+
+// start with one build
+buildsEl.appendChild(buildNode('ESP32-S3', [
+  { path: 'bootloader.bin', offset: BOOTLOADER['ESP32-S3'] },
+  { path: 'partitions.bin', offset: 32768 },
+  { path: 'firmware.bin', offset: 65536 }
+]));
+render();
+</script>
+</body>
+</html>

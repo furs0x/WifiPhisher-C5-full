@@ -1,0 +1,137 @@
+#include "nvs.h"
+#include "esp_log.h"
+#include "config.h"
+
+
+static const char *TAG = "CONFIG";
+
+
+void save_string_to_nvs(const char* key, const char* value) 
+{
+    nvs_handle_t nvs_handle;
+    esp_err_t err;
+
+    err = nvs_open("storage", NVS_READWRITE, &nvs_handle);
+    if (err != ESP_OK) {
+        printf("Errore nell'aprire NVS (%s)\n", esp_err_to_name(err));
+        return;
+    }
+
+    err = nvs_set_str(nvs_handle, key, value);
+    if (err != ESP_OK) {
+        printf("Errore nel salvare la stringa (%s)\n", esp_err_to_name(err));
+    }
+
+    err = nvs_commit(nvs_handle);
+    if (err != ESP_OK) {
+        printf("Errore nel commit della stringa (%s)\n", esp_err_to_name(err));
+    }
+
+    nvs_close(nvs_handle);
+}
+
+
+esp_err_t read_string_from_nvs_sized(const char* key, char* value, size_t value_size)
+{
+    nvs_handle_t nvs_handle;
+    esp_err_t err;
+    size_t required_size = 0;
+
+    if (value == NULL || value_size == 0) return ESP_ERR_INVALID_ARG;
+
+    err = nvs_open("storage", NVS_READONLY, &nvs_handle);
+    if (err != ESP_OK) {
+        ESP_LOGD(TAG, "Errore nell'aprire NVS (%s)\n", esp_err_to_name(err));
+        return ESP_FAIL;
+    }
+
+    /* Ask for the stored length first, then refuse to copy when it would not
+       fit. The previous version passed the caller's buffer to nvs_get_str()
+       without ever comparing required_size against it, so a long stored value
+       written by any other code path could overflow the stack buffer. */
+    err = nvs_get_str(nvs_handle, key, NULL, &required_size);
+    if (err != ESP_OK) {
+        ESP_LOGD(TAG, "Errore nel leggere la dimensione della stringa (%s)\n", esp_err_to_name(err));
+        nvs_close(nvs_handle);
+        return ESP_FAIL;
+    }
+
+    if (required_size > value_size) {
+        ESP_LOGE(TAG, "NVS value for '%s' (%u bytes) exceeds buffer (%u bytes); refusing",
+                 key, (unsigned)required_size, (unsigned)value_size);
+        nvs_close(nvs_handle);
+        return ESP_ERR_INVALID_SIZE;
+    }
+
+    err = nvs_get_str(nvs_handle, key, value, &required_size);
+    if (err != ESP_OK)
+    {
+        ESP_LOGD(TAG, "Errore nel leggere la stringa (%s)\n", esp_err_to_name(err));
+        nvs_close(nvs_handle);
+        return ESP_FAIL;
+    }
+
+    nvs_close(nvs_handle);
+
+    return ESP_OK;
+}
+
+
+/* Legacy wrapper kept for callers that cannot pass a size. It uses a driver-
+   side maximum so the copy can never overrun a buffer smaller than ESP's NVS
+   string cap, though new code should prefer read_string_from_nvs_sized(). */
+esp_err_t read_string_from_nvs(const char* key, char* value) 
+{
+    return read_string_from_nvs_sized(key, value, 4000);
+}
+
+
+void save_int_to_nvs(const char* key, int32_t value) 
+{
+    nvs_handle_t nvs_handle;
+    esp_err_t err;
+
+    err = nvs_open("storage", NVS_READWRITE, &nvs_handle);
+    if (err != ESP_OK) {
+        printf("Errore nell'aprire NVS (%s)\n", esp_err_to_name(err));
+        return;
+    }
+
+    err = nvs_set_i32(nvs_handle, key, value);
+    if (err != ESP_OK) {
+        printf("Errore nel salvare la stringa (%s)\n", esp_err_to_name(err));
+    }
+
+    err = nvs_commit(nvs_handle);
+    if (err != ESP_OK) {
+        printf("Errore nel commit della stringa (%s)\n", esp_err_to_name(err));
+    }
+
+    nvs_close(nvs_handle);
+}
+
+
+esp_err_t read_int_from_nvs(const char* key, int32_t *value) 
+{
+    nvs_handle_t nvs_handle;
+    esp_err_t err;
+
+    err = nvs_open("storage", NVS_READONLY, &nvs_handle);
+    if (err != ESP_OK) {
+        ESP_LOGD(TAG, "Errore nell'aprire NVS (%s)\n", esp_err_to_name(err));
+        return ESP_FAIL;
+    }
+
+    err = nvs_get_i32(nvs_handle, key, value);
+    if (err != ESP_OK) {
+        ESP_LOGD(TAG, "Errore lettura int32 (%s)\n", esp_err_to_name(err));
+        nvs_close(nvs_handle);
+        return ESP_FAIL;
+    }
+
+    nvs_close(nvs_handle);
+
+    return ESP_OK;
+}
+
+
